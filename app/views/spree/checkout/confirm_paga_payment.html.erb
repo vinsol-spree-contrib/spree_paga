@@ -1,0 +1,17 @@
+<h1>Please confirm information below and select payment mode:</h1>
+<p> Email : <%= @order.email %> </p>
+<p> Amount : <%= Spree::Money.new(@order.remaining_total, { currency: @order.currency }) %>  </p>
+<br/>
+<form action="post">
+<input type="hidden" name="subtotal" value="<%= @order.remaining_total %>">
+<input type="hidden" name="description" value="Items from We stay cute">
+<input type="hidden" name="invoice" value="<%= @order.number %>">
+<input type="hidden" name="currency" value="<%= @order.currency %>">
+<input type="hidden" name="return_url" value="<%= paga_callback_url %>">
+<% if Rails.env == "development" %>
+	<input type="hidden" name="test" value="true">
+<% end %>
+</form>
+<!-- begin Paga ePay widget code -->
+<script type="text/javascript" src="https://www.mypaga.com/paga-web/epay/ePay-button.paga?k=c8830e78-11f0-4454-ad21-7927d3771c2a&e=false"> </script>
+<!-- end Paga ePay widget code -->

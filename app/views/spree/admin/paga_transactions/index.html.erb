@@ -1,0 +1,41 @@
+<%= render :partial => 'spree/admin/shared/configuration_menu' %>
+<% content_for :page_title do %>
+  <h1><%= Spree.t("paga_transactions") %></h1>
+<% end %>
+
+<table class="index">
+  <thead data-hook="admin_paga_transactions_index_headers">
+    <th><%= Spree.t("transaction_id") %></th>
+    <th><%= Spree.t("transaction_date") %></th>
+    <th><%= Spree.t("amount") %></th>
+    <th><%= Spree.t("order#") %></th>
+    <th><%= Spree.t("user") %></th>
+    <th><%= Spree.t("status") %></th>
+    <th><%= Spree.t("response_status") %></th>
+    <th data-hook="admin_paga_transactions_index_header_actions">&nbsp;</th>
+  </thead>
+  <tbody>
+    <% @paga_transactions.each do |transaction|%>
+      <tr id="<%= dom_id transaction %>" data-hook="admin_trackers_index_rows">
+        <td><%= transaction.transaction_id %></td>
+        <td><%= transaction.created_at %></td>
+        <td><%= Spree::Money.new(transaction.amount, { currency: transaction.transaction_currency }) %></td>
+        <td><%= transaction.order.number %></td>
+        <td><%= transaction.user ? transaction.user.email : "Guest User" %></td>
+        <td class="status"><%= transaction.status %></td>
+        <td><%= transaction.response_status %></td>
+        <td id= "<%= transaction.id%>" >
+          <%= link_to_if(transaction.success?, "") do %>
+            <%= link_to(Spree.t("complete"), complete_admin_paga_transaction_path(transaction), :remote => true, :confirm => "Are you sure?") %>
+          <% end %>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<%= paginate @paga_transactions %>
+
+<script type="text/javascript">
+
+</script>

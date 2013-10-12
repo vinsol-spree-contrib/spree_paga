@@ -1,0 +1,5 @@
+<%= content_tag :div, :class => "flash #{additional_class}", :id => 'flash' do %>
+  <% flash.collect do |type, message| %>
+    <%= content_tag(:div, message.try(:html_safe), :class => "message #{ type }") %>
+  <% end %> 
+<% end %>
