@@ -11,7 +11,7 @@ class Spree::PagaNotification < ActiveRecord::Base
     if paga_transaction && paga_transaction.amount_valid?
       paga_transaction.status = Spree::PagaTransaction::SUCCESSFUL
       paga_transaction.amount = self.amount
-      paga_transaction.save!
+      paga_transaction.save
       order.finalize_order if (order = paga_transaction.order) && order.pending? 
     end
   end
