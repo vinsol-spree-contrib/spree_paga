@@ -4,6 +4,17 @@ class Spree::PagaNotification < ActiveRecord::Base
 
   after_save :check_transaction_status
 
+  def self.save_with_params(params, transaction_id)
+    transaction_response = Spree::PagaNotification.new
+    transaction_response.transaction_reference = params[:transaction_reference]
+    transaction_response.transaction_id = transaction_id
+    transaction_response.amount = params[:amount]
+    transaction_response.transaction_type = params[:transaction_type]
+    transaction_response.transaction_datetime = params[:transaction_datetime].to_datetime
+    transaction_response.save
+  end
+
+
   private
 
   def check_transaction_status

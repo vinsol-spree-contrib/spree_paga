@@ -14,7 +14,6 @@ Spree::CheckoutController.class_eval do
   end
 
 	def paga_callback
-    redirect_to(spree.root_path) and return if request.get?
     if authenticate_merchant_key(params[:key]) && params['status'] == "SUCCESS"
       @transaction = @order.paga_transaction.build(:amount => params[:total].to_f)
       @transaction.user = spree_current_user if spree_current_user
@@ -39,17 +38,8 @@ Spree::CheckoutController.class_eval do
   def paga_notification
     transaction_id = Rails.env.development? ? ("trans" + @transaction.order.number) : params[:transaction_id]
     transaction_exist = Spree::PagaNotification.where(:transaction_id => transaction_id).first
-    logger.info "Transaction with this transaction_id already exist"  if transaction_exist
     if authenticate_merchant_key(params[:merchant_key]) && authenticate_notification_key(params[:notification_private_key]) && !transaction_exist
-      logger.info "Merchant authenticated"
-      transaction_response = Spree::PagaNotification.new
-      transaction_response.transaction_reference = params[:transaction_reference]
-      transaction_response.transaction_id = transaction_id
-      transaction_response.amount = params[:amount]
-      transaction_response.transaction_type = params[:transaction_type]
-      transaction_response.transaction_datetime = params[:transaction_datetime].to_datetime
-      transaction_response.save
-      logger.info "Transaction saved"
+      Spree::PagaNotification.build_with_params(params, transaction_id)
     end
     render :nothing => true
   end
@@ -94,11 +84,13 @@ Spree::CheckoutController.class_eval do
       payment.source = Spree::PaymentMethod::Paga.first
       payment.save
       payment.started_processing!
+      process_transaction
+    end
+
+    def process_transaction
       if @transaction.reload.success?
         if @transaction.amount_valid?
-          @success = "Transaction was successful and your order has been completed."
           finalize_order
-          redirect_to completion_route and return
         else
           set_to_payment_pending(payment)
           redirect_to checkout_state_path(:state => "payment") and return
@@ -119,6 +111,7 @@ Spree::CheckoutController.class_eval do
       @order.finalize_order
       session[:order_id] = nil
       flash[:notice] = Spree.t(:order_processed_successfully)
+      redirect_to completion_route and return
     end
 
     def set_to_payment_pending(payment)
