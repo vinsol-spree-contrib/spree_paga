@@ -48,7 +48,7 @@ Spree::CheckoutController.class_eval do
 
     def redirect_to_paga_if_payment_by_paga
       if params[:state] == "payment" && params[:order][:payments_attributes]
-        payment_method = Spree::PaymentMethod.where(:id => (paga_payment_attributes(params[:order][:payments_attributes])["payment_method_id"])).first
+        payment_method = Spree::PaymentMethod.where(:id => (paga_payment_attributes(params[:order][:payments_attributes]))).first
         if payment_method.kind_of?(Spree::PaymentMethod::Paga)
           if @order.update_attributes(object_params)
             after_update_attributes
