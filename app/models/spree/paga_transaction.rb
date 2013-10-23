@@ -45,5 +45,6 @@ class Spree::PagaTransaction < ActiveRecord::Base
       self.status = SUCCESSFUL
       self.amount = paga_notification.amount
     end
+    true
   end
 end

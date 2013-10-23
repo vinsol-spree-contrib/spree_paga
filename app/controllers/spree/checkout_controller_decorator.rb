@@ -13,9 +13,9 @@ Spree::CheckoutController.class_eval do
     end
   end
 
-	def paga_callback
+  def paga_callback
     if authenticate_merchant_key(params[:key]) && params['status'] == "SUCCESS"
-      @transaction = @order.paga_transaction.build(:amount => params[:total].to_f)
+      @transaction = @order.build_paga_transaction(:amount => params[:total].to_f)
       @transaction.user = spree_current_user if spree_current_user
       if @transaction.valid?
         handle_paga_response!
@@ -84,10 +84,10 @@ Spree::CheckoutController.class_eval do
       payment.source = Spree::PaymentMethod::Paga.first
       payment.save
       payment.started_processing!
-      process_transaction
+      process_transaction(payment)
     end
 
-    def process_transaction
+    def process_transaction(payment)
       if @transaction.reload.success?
         if @transaction.amount_valid?
           finalize_order
