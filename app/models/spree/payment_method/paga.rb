@@ -1,5 +1,9 @@
 module Spree
   class PaymentMethod::Paga < PaymentMethod
+
+    preference :private_notification_key
+    preference :merchant_key
+    preference :paga_script
     def actions
       %w{}
     end

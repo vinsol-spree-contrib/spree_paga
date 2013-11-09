@@ -14,9 +14,9 @@ Spree::CheckoutController.class_eval do
   end
 
   def paga_callback
+    @transaction = @order.build_paga_transaction(:amount => params[:total].to_f)
+    @transaction.user = spree_current_user if spree_current_user
     if authenticate_merchant_key(params[:key]) && params['status'] == "SUCCESS"
-      @transaction = @order.build_paga_transaction(:amount => params[:total].to_f)
-      @transaction.user = spree_current_user if spree_current_user
       if @transaction.valid?
         handle_paga_response!
       else
@@ -26,10 +26,10 @@ Spree::CheckoutController.class_eval do
       @transaction.response_status = params[:status]
       @transaction.status = Spree::PagaTransaction::UNSUCCESSFUL
       @transaction.save
-      logger.info "Transaction ##{@transaction.id} response is not successful"
       flash[:error] = "Transaction Failed." + "<br/>" + "Reason: " + params[:status]
+      redirect_to(spree.root_path) and return
     else
-      logger.info "Request cannot be authenticated"
+      redirect_to(spree.root_path, :flash => { :error => "Invalid Request!" }) and return
       flash[:error] = "Invalid Request!"
     end
   end
@@ -59,15 +59,17 @@ Spree::CheckoutController.class_eval do
     end
 
     def paga_payment_attributes(payment_attributes)
-      payment_attributes.select { |payment| payment["payment_method_id"] == Spree::PaymentMethod::Paga.first.id.to_s }.first
+      payment_attributes.select { |payment| payment["payment_method_id"] == payment_method.id.to_s }.first
     end
 
     def authenticate_merchant_key(key)
-      key == Spree::PagaTransaction::MERCHANT_KEY
+      # key == Spree::PagaTransaction::MERCHANT_KEY
+      key == payment_method.preferred_merchant_key
     end
 
     def authenticate_notification_key(key)
-      key == Spree::PagaTransaction::PRIVATE_NOTIFICATION_KEY
+      # key == Spree::PagaTransaction::PRIVATE_NOTIFICATION_KEY
+      key == payment_method.preferred_private_notification_key
     end
 
     def handle_paga_response!
@@ -79,7 +81,6 @@ Spree::CheckoutController.class_eval do
       end
       @transaction.response_status = params[:status]
       @transaction.save
-      Rails.logger.info "Transaction details updated"
       payment = @order.paga_payment
       payment.source = Spree::PaymentMethod::Paga.first
       payment.save
@@ -102,8 +103,12 @@ Spree::CheckoutController.class_eval do
         redirect_to completion_route and return
       else
         payment.failure!
-        redirect_to edit_order_checkout_url(@order, :state => "payment") and return
+        redirect_to checkout_state_path(:state => "payment") and return
       end
+    end
+
+    def payment_method
+      Spree::PaymentMethod::Paga.first
     end
 
 

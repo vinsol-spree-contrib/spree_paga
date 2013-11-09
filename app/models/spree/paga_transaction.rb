@@ -2,8 +2,8 @@ class Spree::PagaTransaction < ActiveRecord::Base
   attr_accessible :amount, :status
   MINIMUM_AMT = 1
   MAXIMUM_AMT = 200000
-  MERCHANT_KEY = "c8830e78-11f0-4454-ad21-7927d3771c2a"
-  PRIVATE_NOTIFICATION_KEY = "we$t@ycute"
+  # MERCHANT_KEY = "c8830e78-11f0-4454-ad21-7927d3771c2a"
+  # PRIVATE_NOTIFICATION_KEY = "we$t@ycute"
   PENDING      = 'Pending'
   SUCCESSFUL  = 'Successful'
   UNSUCCESSFUL = 'Unsuccessful'
