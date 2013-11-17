@@ -4,7 +4,7 @@ Spree::Order.class_eval do
 
 	def paga_payment
     @paga_payment_method = Spree::PaymentMethod::Paga.where(:environment => Rails.env).first
-    payments.where("payment_method_id = #{@paga_payment_method.id} and state in ('checkout', 'pending')").first if @paga_payment_method
+    payments.where("payment_method_id = #{@paga_payment_method.id} and state in ('checkout', 'pending', 'processing')").first if @paga_payment_method
   end
 
   scope :not_pending, -> { where('state != ?', "pending")}
