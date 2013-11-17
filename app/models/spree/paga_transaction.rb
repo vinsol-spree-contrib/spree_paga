@@ -1,16 +1,13 @@
 class Spree::PagaTransaction < ActiveRecord::Base
   attr_accessible :amount, :status
   MINIMUM_AMT = 1
-  MAXIMUM_AMT = 200000
-  # MERCHANT_KEY = "c8830e78-11f0-4454-ad21-7927d3771c2a"
-  # PRIVATE_NOTIFICATION_KEY = "we$t@ycute"
   PENDING      = 'Pending'
   SUCCESSFUL  = 'Successful'
   UNSUCCESSFUL = 'Unsuccessful'
 
   belongs_to :order
   belongs_to :user
-  validates :amount, :numericality => { :greater_than_or_equal_to => MINIMUM_AMT, :less_than_or_equal_to => MAXIMUM_AMT }
+  validates :amount, :numericality => { :greater_than_or_equal_to => MINIMUM_AMT }
   validates :transaction_id, :order, :presence => true, :unless => lambda {|t| t.response_status? }
   validates :transaction_id, :uniqueness => true
 	
