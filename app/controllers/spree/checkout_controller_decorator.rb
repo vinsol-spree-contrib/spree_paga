@@ -1,8 +1,8 @@
 Spree::CheckoutController.class_eval do
- skip_before_filter :verify_authenticity_token, :only => [:confirm_paga_payment, :paga_callback, :paga_notification]
+  skip_before_filter :verify_authenticity_token, :only => [:confirm_paga_payment, :paga_callback, :paga_notification]
 
- before_filter :redirect_to_paga_if_payment_by_paga, :only => [:update]
- helper_method :payment_method
+  before_filter :redirect_to_paga_if_payment_by_paga, :only => [:update]
+  helper_method :payment_method
 
   def confirm_paga_payment
     amount = @order.remaining_total
@@ -30,7 +30,7 @@ Spree::CheckoutController.class_eval do
   def paga_notification
     notification = Spree::PagaNotification.where(:transaction_id => params[:transaction_id]).first
     if authentic_request? && !notification
-      Spree::PagaNotification.build_with_params(params, transaction_id)
+      Spree::PagaNotification.build_with_params(params)
     end
     render :nothing => true
   end

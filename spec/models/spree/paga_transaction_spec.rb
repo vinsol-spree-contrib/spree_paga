@@ -11,9 +11,11 @@ describe Spree::PagaTransaction do
   it {should belong_to(:user)}
 
   it { should validate_numericality_of(:amount).is_greater_than_or_equal_to(Spree::PagaTransaction::MINIMUM_AMT)}
-  it { should validate_numericality_of(:amount).is_less_than_or_equal_to(Spree::PagaTransaction::MAXIMUM_AMT)}
-  it { should validate_presence_of(:transaction_id)}
-  it { should validate_presence_of(:order)}
+  context 'presence' do
+    before { subject.stub(:response_status?) { true } }
+    it { should validate_presence_of(:transaction_id)}
+    it { should validate_presence_of(:order)}
+  end
   it { should validate_uniqueness_of(:transaction_id)}
 
   describe 'methods' do

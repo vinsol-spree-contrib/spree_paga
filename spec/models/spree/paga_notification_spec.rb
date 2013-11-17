@@ -56,4 +56,15 @@ describe Spree::PagaNotification do
       end
     end
   end
+
+
+  describe '.build_with_params' do
+    it "should save attributes of notification" do
+      notification = Spree::PagaNotification.build_with_params({:transaction_reference => "123", :transaction_id => "trans123", :amount => 100.0, :transaction_type => "paga"})
+      notification.transaction_reference.should  eq("123")
+      notification.transaction_id.should  eq("trans123")
+      notification.amount.should  eq(100.0)
+      notification.transaction_type.should  eq("paga")
+    end
+  end
 end
