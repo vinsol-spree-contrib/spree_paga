@@ -8,7 +8,7 @@ class Spree::PagaTransaction < ActiveRecord::Base
   belongs_to :order
   belongs_to :user
   validates :amount, :numericality => { :greater_than_or_equal_to => MINIMUM_AMT }
-  validates :transaction_id, :order, :presence => true, :unless => lambda {|t| t.response_status? }
+  validates :transaction_id, :order, :presence => true, :if => lambda {|t| t.response_status? }
   validates :transaction_id, :uniqueness => true
 	
 	before_validation :assign_values, :on => :create
