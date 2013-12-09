@@ -15,7 +15,7 @@ Spree::Order.class_eval do
     end
   end
 
-#### override this if partial payment is allowed as needed
+#### override this if partial payment is allowed as needed.
   def remaining_total
     total
   end
