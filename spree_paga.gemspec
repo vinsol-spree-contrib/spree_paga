@@ -2,12 +2,11 @@
 Gem::Specification.new do |s|
   s.platform    = Gem::Platform::RUBY
   s.name        = 'spree_paga'
-  s.version     = '2.0.3'
-  s.summary     = 'TODO: Add gem summary here'
-  s.description = 'TODO: Add (optional) gem description here'
+  s.version     = '2.0.6'
+  s.summary     = 'Add Payment method paga'
   s.required_ruby_version = '>= 1.9.3'
 
-  s.author    = 'Team Vinsol'
+  s.author    = 'Abhishek Jain'
   s.email     = 'info [at] vinsol [dot] com'
   s.homepage  = 'http://www.vinsol.com'
 
@@ -16,7 +15,7 @@ Gem::Specification.new do |s|
   s.require_path = 'lib'
   s.requirements << 'none'
 
-  s.add_dependency 'spree_core', '~> 2.0.3'
+  s.add_dependency 'spree_core', '~> 2.0'
 
   s.add_development_dependency 'capybara', '~> 2.1'
   s.add_development_dependency 'coffee-rails'
