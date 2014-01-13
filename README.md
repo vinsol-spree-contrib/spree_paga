@@ -8,6 +8,8 @@ Add spree_paga to your Gemfile:
 
 ```ruby
 gem 'spree_paga', :git => 'git://github.com/vinsol/spree_paga.git'
+        OR
+gem 'spree_paga', '->~ 2.0.6'
 ```
 
 Bundle your dependencies and run the installation generator:
