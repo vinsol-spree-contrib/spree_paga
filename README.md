@@ -7,7 +7,9 @@ Installation
 Add spree_paga to your Gemfile:
 
 ```ruby
-gem 'spree_paga', :git => 'git://github.com/abhishekjain16/spree_paga.git'
+gem 'spree_paga', :git => 'git://github.com/vinsol/spree_paga.git'
+        OR
+gem 'spree_paga', '->~ 2.0.6'
 ```
 
 Bundle your dependencies and run the installation generator:
@@ -21,7 +23,7 @@ bundle exec rake db:migrate
 
 Usage
 -------
-This is an extemsion for paga payment method which used for Card payment using Paga.
+This is an extension for paga payment method which used for Card payment using Paga.
 
 It also supports partial payments(if needed)
 
