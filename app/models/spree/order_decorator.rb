@@ -20,6 +20,10 @@ Spree::Order.class_eval do
     total
   end
 
+  def payment_or_complete_or_pending?
+    payment? || complete? || pending?
+  end
+
   def finalize_order
     paga_payment.complete!
     update_attributes({:state => "complete", :completed_at => Time.now}, :without_protection => true)

@@ -64,7 +64,7 @@ Spree::CheckoutController.class_eval do
     def handle_paga_response!
       set_paga_transaction_details
       payment = @order.paga_payment
-      payment.source = Spree::PaymentMethod::Paga.first
+      payment.source = payment_method
       payment.save
       create_notification if Rails.env.development?
       payment.started_processing!

@@ -1,7 +1,5 @@
 <% if flash[:success] %>
-  $('#wrapper').prepend("<%= j(render :partial => 'spree/shared/flash_messages', :locals => {:additional_class => 'success'}) %>");
 	$('td#'+"<%= @paga_transaction.id%>").html("")
 	$('td.status').html("<%=j(Spree::PagaTransaction::SUCCESSFUL)%>")
-<% else %>
-  $('#wrapper').prepend("<%= j(render :partial => 'spree/shared/flash_messages', :locals => {:additional_class => 'error'}) %>");
 <% end %>
+$('#wrapper').prepend("<%= j(render :partial => 'spree/shared/flash_messages', :locals => {:additional_class => flash[:success] ? 'success' : 'error'}) %>");

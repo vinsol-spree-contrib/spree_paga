@@ -60,6 +60,47 @@ describe Spree::Order do
     end
   end
 
+  describe 'payment_or_complete_or_pending' do
+    context 'when order complete' do
+      before do
+        @order = create_order_with_state("complete")
+      end
+
+      it "should return true" do
+        @order.payment_or_complete_or_pending?.should be_true
+      end
+    end
+
+    context 'when order pending' do
+      before do
+        @order = create_order_with_state("pending")
+      end
+
+      it "should return true" do
+        @order.payment_or_complete_or_pending?.should be_true
+      end
+    end
+
+    context 'when order payment' do
+      before do
+        @order = create_order_with_state("payment")
+      end
+
+      it "should return true" do
+        @order.payment_or_complete_or_pending?.should be_true
+      end
+    end
+
+    context 'when order neither complete nor pending nor payment' do
+      before do
+        @order = create_order_with_state("cart")
+      end
+
+      it "should return true" do
+        @order.payment_or_complete_or_pending?.should be_false
+      end
+    end
+  end
 
   describe 'scope not_pending' do
     def create_order_with_state(state)
