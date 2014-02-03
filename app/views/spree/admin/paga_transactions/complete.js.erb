@@ -1,3 +1,4 @@
+// Instead of using flash to check success. we should check @paga_transaction status
 <% if flash[:success] %>
 	$('td#'+"<%= @paga_transaction.id%>").html("")
 	$('td.status').html("<%=j(Spree::PagaTransaction::SUCCESSFUL)%>")

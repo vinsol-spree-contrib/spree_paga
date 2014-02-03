@@ -18,12 +18,14 @@ class Spree::PagaNotification < ActiveRecord::Base
 
   private
 
+  #[TODO_CR] the method name is not appropriate. Here we are updating transaction.
   def check_transaction_status
     paga_transaction = Spree::PagaTransaction.where(:transaction_id => self.transaction_id).first
     if paga_transaction && paga_transaction.amount_valid?
       paga_transaction.status = Spree::PagaTransaction::SUCCESSFUL
       paga_transaction.amount = self.amount
       paga_transaction.save
+      #[TODO_CR] I think finalize_order should be moved into after save callback of PagaTransaction.
       order.finalize_order if (order = paga_transaction.order) && order.pending? 
     end
   end

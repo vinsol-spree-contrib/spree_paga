@@ -4,10 +4,13 @@
 <br/>
 <form action="post">
 <input type="hidden" name="subtotal" value="<%= @order.remaining_total %>">
+<!-- [TODO_CR] Below message is not good -->
 <input type="hidden" name="description" value="Items from We stay cute">
 <input type="hidden" name="invoice" value="<%= @order.number %>">
 <input type="hidden" name="currency" value="<%= @order.currency %>">
 <input type="hidden" name="return_url" value="<%= paga_callback_url %>">
+
+<!-- [TODO_CR] Rails.env.development? -->
 <% if Rails.env == "development" %>
 	<input type="hidden" name="test" value="true">
 <% end %>

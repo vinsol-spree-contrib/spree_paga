@@ -2,11 +2,15 @@
 Gem::Specification.new do |s|
   s.platform    = Gem::Platform::RUBY
   s.name        = 'spree_paga'
+  #[TODO_CR] Not sure what its version is 2.0.6. Can we rename this to 1.0.0
   s.version     = '2.0.6'
   s.summary     = 'Add Payment method paga'
+  #[TODO_CR] Please add description for the extension
+  # add s.license   = "MIT"
   s.required_ruby_version = '>= 1.9.3'
 
   s.author    = 'Abhishek Jain'
+  #[TODO_CR] Can we chnage this to info@vinsol.com
   s.email     = 'info [at] vinsol [dot] com'
   s.homepage  = 'http://www.vinsol.com'
 

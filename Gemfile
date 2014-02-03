@@ -1,3 +1,6 @@
+#[TODO_CR] Displaying some duplicate gems warning while doing bundle install
+# Gemfile lists the gem capybara (~> 2.1) and ffaker (>= 0) more than once.
+
 source 'https://rubygems.org'
 
 gem 'json'

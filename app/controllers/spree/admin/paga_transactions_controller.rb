@@ -9,6 +9,8 @@ module Spree
       def complete
         @order = @paga_transaction.order
         begin
+          #[TODO_CR] First of all finalize_order and tranx update should be in transaction.
+          # We should move finalize_order to after callback of tranx update. What you think?
           @order.finalize_order
           @paga_transaction.update_attributes(:status => Spree::PagaTransaction::SUCCESSFUL)
           flash.now[:success] = "Order Completed"

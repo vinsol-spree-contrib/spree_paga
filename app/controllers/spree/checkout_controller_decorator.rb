@@ -15,8 +15,11 @@ Spree::CheckoutController.class_eval do
   end
 
   def paga_callback
+    # [TODO_CR] Do we really need to do params[:total].to_f ?
     @transaction = @order.build_paga_transaction(:amount => params[:total].to_f)
     @transaction.user = spree_current_user
+    # [TODO_CR] authenticate_merchant_key should be moved into a before filter
+    # Any reason of not using symbolized :status key here
     if authenticate_merchant_key(params[:key]) && params['status'] == "SUCCESS" && @transaction.valid?
       handle_paga_response!
     elsif params[:status] && @transaction.valid?
@@ -29,7 +32,10 @@ Spree::CheckoutController.class_eval do
 
   def paga_notification
     notification = Spree::PagaNotification.where(:transaction_id => params[:transaction_id]).first
+    # [TODO_CR] We can move notification find and authentic_request into before filters
+    # And Log appropriate message if notification is not found and request is not authentic.
     if authentic_request? && !notification
+      #[TODO_CR] This method name should be create_from_params I guess.
       Spree::PagaNotification.build_with_params(params)
     end
     render :nothing => true
@@ -61,11 +67,14 @@ Spree::CheckoutController.class_eval do
       key == payment_method.preferred_private_notification_key
     end
 
+    #[TODO_CR] Optimisation needed for the logic written after this call.
+    # Please discuss this with me.
     def handle_paga_response!
       set_paga_transaction_details
       payment = @order.paga_payment
       payment.source = payment_method
       payment.save
+      #[TODO_CR] shouldn't we use build_with_params instead of create_notification
       create_notification if Rails.env.development?
       payment.started_processing!
       process_transaction(payment)
