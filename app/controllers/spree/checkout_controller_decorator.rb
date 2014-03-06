@@ -2,24 +2,27 @@ Spree::CheckoutController.class_eval do
   skip_before_filter :verify_authenticity_token, :only => [:confirm_paga_payment, :paga_callback, :paga_notification]
 
   before_filter :redirect_to_paga_if_payment_by_paga, :only => [:update]
+  before_filter :authenticate_merchant_key, :only => :paga_callback
+  before_filter :authenticate_notification_key, :only => :paga_notification
   helper_method :payment_method
 
   def confirm_paga_payment
-    amount = @order.remaining_total
-    @transaction = Spree::PagaTransaction.new(:amount => amount)
+    @transaction = Spree::PagaTransaction.new(:amount => @order.remaining_total)
     unless @transaction.valid?
-      flash[:error] = "Something went wrong. Please try again"
-      flash[:error] = "Amount #{@transaction.errors["amount"].join}" if @transaction.errors["amount"].any?
+      if @transaction.errors[:amount].any?
+        flash[:error] = "Amount #{@transaction.errors["amount"].join}"
+      else
+        flash[:error] = "Something went wrong. Please try again"
+      end
       redirect_to spree.cart_path and return
     end
   end
 
   def paga_callback
-    @transaction = @order.build_paga_transaction(:amount => params[:total].to_f)
-    @transaction.user = spree_current_user
-    if authenticate_merchant_key(params[:key]) && params['status'] == "SUCCESS" && @transaction.valid?
+    @transaction = @order.paga_transactions.create { |t| t.user = spree_current_user }
+    if params[:status] == Spree::PagaTransaction::SUCCESSFUL && @transaction.persisted?
       handle_paga_response!
-    elsif params[:status] && @transaction.valid?
+    elsif params[:status] && @transaction.persisted?
       set_unsuccesful_transaction_status_and_redirect and return
     else
       redirect_to(spree.root_path, :flash => { :error => "Invalid Request!" }) and return
@@ -28,10 +31,7 @@ Spree::CheckoutController.class_eval do
 
 
   def paga_notification
-    notification = Spree::PagaNotification.where(:transaction_id => params[:transaction_id]).first
-    if authentic_request? && !notification
-      Spree::PagaNotification.build_with_params(params)
-    end
+    Spree::PagaNotification.build_with_params(params, transaction_id) unless Spree::PagaNotification.where(:transaction_id => params[:transaction_id]).first
     render :nothing => true
   end
 
@@ -39,7 +39,7 @@ Spree::CheckoutController.class_eval do
 
     def redirect_to_paga_if_payment_by_paga
       if params[:state] == "payment" && params[:order][:payments_attributes]
-        payment_method = Spree::PaymentMethod.where(:id => (paga_payment_attributes(params[:order][:payments_attributes])["payment_method_id"])).first
+        payment_method = Spree::PaymentMethod.where(:id => (paga_payment_attributes(params[:order][:payments_attributes])[:payment_method_id])).first
         if payment_method.kind_of?(Spree::PaymentMethod::Paga)
           if @order.update_attributes(object_params)
             after_update_attributes
@@ -50,42 +50,28 @@ Spree::CheckoutController.class_eval do
     end
 
     def paga_payment_attributes(payment_attributes)
-      payment_attributes.select { |payment| payment["payment_method_id"] == payment_method.id.to_s }.first
+      payment_attributes.select { |payment| payment[:payment_method_id] == payment_method.id.to_s }.first
     end
 
-    def authenticate_merchant_key(key)
-      key == payment_method.preferred_merchant_key
+    def authenticate_merchant_key
+      redirect_to(spree.root_path, :flash => { :error => "Invalid Request!" }) unless params[:key] == payment_method.preferred_merchant_key
     end
 
-    def authenticate_notification_key(key)
-      key == payment_method.preferred_private_notification_key
+    def authenticate_notification_key
+      render :nothing => true unless params[:notification_private_key] == payment_method.preferred_private_notification_key
     end
 
     def handle_paga_response!
-      set_paga_transaction_details
-      payment = @order.paga_payment
-      payment.source = payment_method
-      payment.save
+      @transaction.update_transaction(params)
       create_notification if Rails.env.development?
-      payment.started_processing!
-      process_transaction(payment)
+      process_transaction
     end
 
-    def process_transaction(payment)
+    def process_transaction
       if @transaction.reload.success?
-        if @transaction.amount_valid?
-          finalize_order
-        else
-          set_to_payment_pending(payment)
-          redirect_to checkout_state_path(:state => "payment") and return
-        end
-      elsif @transaction.pending?
-        set_to_payment_pending(payment)
-        @order.pending!
-        session[:order_id] = nil
-        redirect_to completion_route and return
+        complete_order
       else
-        payment.failure!
+        flash[:error] = "We are unable to process your payment <br/> Please keep this Transaction number: #{@transaction.transaction_id} for future reference".html_safe
         redirect_to checkout_state_path(:state => "payment") and return
       end
     end
@@ -94,23 +80,9 @@ Spree::CheckoutController.class_eval do
       Spree::PaymentMethod::Paga.first
     end
 
-    def set_paga_transaction_details
-      if params['transaction_id'] || (params['transaction_id'].blank? && !Rails.env.production?)
-        @transaction.transaction_id = get_transaction_id
-        @transaction.paga_fee = params[:fee]
-      end
-      @transaction.response_status = params[:status]
-      @transaction.save
-    end
-
-    def get_transaction_id
-      Rails.env.development? ? ("trans" + @transaction.order.number) : params[:transaction_id]
-    end
-
-    def finalize_order
-      @order.finalize_order
-      session[:order_id] = nil
+    def complete_order
       flash[:notice] = Spree.t(:order_processed_successfully)
+      session[:order_id] = nil
       redirect_to completion_route and return
     end
 
@@ -119,22 +91,13 @@ Spree::CheckoutController.class_eval do
       @transaction.status = Spree::PagaTransaction::UNSUCCESSFUL
       @transaction.save
       flash[:error] = "Transaction Failed." + "<br/>" + "Reason: " + params[:status]
-      redirect_to(spree.root_path)
-    end
-
-    def authentic_request?
-      authenticate_merchant_key(params[:merchant_key]) && authenticate_notification_key(params[:notification_private_key])
-    end
-
-    def set_to_payment_pending(payment)
-      payment.pend!
-      flash[:error] = "We are sorry. We are unable to authorize your purchase amount. Please contact our Administrator."
+      redirect_to checkout_state_path(:state => "payment")
     end
 
     ### creating notification for testing in development/test environment
     def create_notification
       transaction_response = Spree::PagaNotification.new
-      transaction_response.transaction_id = get_transaction_id
+      transaction_response.transaction_id = @transaction.transaction_id
       transaction_response.amount = params['total'].to_f
       transaction_response.save
     end

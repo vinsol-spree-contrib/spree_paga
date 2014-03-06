@@ -19,7 +19,7 @@
       <tr id="<%= dom_id transaction %>" data-hook="admin_trackers_index_rows">
         <td><%= transaction.transaction_id %></td>
         <td><%= transaction.created_at %></td>
-        <td><%= Spree::Money.new(transaction.amount, { currency: transaction.transaction_currency }) %></td>
+        <td><%= Spree::Money.new(transaction.amount, { currency: transaction.currency }) %></td>
         <td><%= transaction.order.number %></td>
         <td><%= transaction.user ? transaction.user.email : "Guest User" %></td>
         <td class="status"><%= transaction.status %></td>

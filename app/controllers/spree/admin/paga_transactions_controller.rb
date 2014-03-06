@@ -9,7 +9,6 @@ module Spree
       def complete
         @order = @paga_transaction.order
         begin
-          @order.finalize_order
           @paga_transaction.update_attributes(:status => Spree::PagaTransaction::SUCCESSFUL)
           flash.now[:success] = "Order Completed"
         rescue

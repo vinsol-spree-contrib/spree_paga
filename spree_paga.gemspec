@@ -2,13 +2,14 @@
 Gem::Specification.new do |s|
   s.platform    = Gem::Platform::RUBY
   s.name        = 'spree_paga'
-  s.version     = '2.0.6'
+  s.version     = '1.0.0'
   s.summary     = 'Add Payment method paga'
   s.required_ruby_version = '>= 1.9.3'
 
   s.author    = 'Abhishek Jain'
-  s.email     = 'info [at] vinsol [dot] com'
+  s.email     = 'info@vinsol.comcom'
   s.homepage  = 'http://www.vinsol.com'
+  s.description = 'Extension for Paga Payment gateway'
 
   #s.files       = `git ls-files`.split("\n")
   #s.test_files  = `git ls-files -- {test,spec,features}/*`.split("\n")

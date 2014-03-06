@@ -1,5 +1,5 @@
 class Spree::PagaTransaction < ActiveRecord::Base
-  attr_accessible :amount, :status
+  # attr_accessible :amount, :status
   MINIMUM_AMT = 1
   PENDING      = 'Pending'
   SUCCESSFUL  = 'Successful'
@@ -12,14 +12,24 @@ class Spree::PagaTransaction < ActiveRecord::Base
   validates :transaction_id, :uniqueness => true
 
   before_validation :assign_values, :on => :create
-  before_save :check_transaction_status, :unless => lambda {|t| t.success? }
+  before_save :update_transaction_status, :unless => :success?
+  before_save :update_payment_source, :if => :transaction_id_changed?
+  before_save :finalize_order, :if => [:status_changed?, :success?]
+  before_update :set_pending_for_payment, :if => [:transaction_id_changed?, :pending?]
+  before_save :order_set_failure_for_payment, :if => [:status_changed?, :unsuccessful?]
+  delegate :currency, to: :order
 
   def assign_values
     self.status = PENDING
+    self.amount = order.remaining_total
   end
 
   def success?
     status == SUCCESSFUL
+  end
+
+  def unsuccessful?
+    status == UNSUCCESSFUL
   end
 
   def pending?
@@ -30,13 +40,44 @@ class Spree::PagaTransaction < ActiveRecord::Base
     amount >= order.remaining_total
   end
 
-  def transaction_currency
-    order.currency
+  def update_transaction(transaction_params)
+    self.transaction_id = transaction_params[:transaction_id] || generate_transaction_id
+    self.paga_fee = transaction_params[:fee]
+    self.amount = transaction_params[:total]
+    self.response_status = transaction_params[:status]
+    self.save
   end
 
   private
 
-  def check_transaction_status
+  def set_pending_for_payment
+    payment = order.paga_payment
+    payment.pend!
+  end
+
+  def order_set_failure_for_payment
+    payment = order.paga_payment
+    payment.failure!
+  end
+
+  def finalize_order
+    order.finalize_order
+  end
+
+  def update_payment_source
+    payment = order.paga_payment
+    payment.source = Spree::PaymentMethod::Paga.first
+    payment.save
+    payment.started_processing!
+  end
+
+  def generate_transaction_id
+    begin
+      transaction_id = SecureRandom.hex(8)
+    end while Spree::PagaTransaction.exists?(:transaction_id => transaction_id)
+  end
+
+  def update_transaction_status
     paga_notification = Spree::PagaNotification.where(:transaction_id => self.transaction_id).first
     if paga_notification && amount_valid?
       self.status = SUCCESSFUL

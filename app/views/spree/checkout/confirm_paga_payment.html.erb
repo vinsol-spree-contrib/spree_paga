@@ -4,12 +4,12 @@
 <br/>
 <form action="post">
 <input type="hidden" name="subtotal" value="<%= @order.remaining_total %>">
-<input type="hidden" name="description" value="Items from We stay cute">
+<input type="hidden" name="description" value="Items">
 <input type="hidden" name="invoice" value="<%= @order.number %>">
 <input type="hidden" name="currency" value="<%= @order.currency %>">
 <input type="hidden" name="return_url" value="<%= paga_callback_url %>">
-<% if Rails.env == "development" %>
-	<input type="hidden" name="test" value="true">
+<% if Rails.env.development? %>
+  <input type="hidden" name="test" value="true">
 <% end %>
 </form>
 <!-- begin Paga ePay widget code -->
