@@ -7,7 +7,7 @@ Spree::CheckoutController.class_eval do
   helper_method :payment_method
 
   def confirm_paga_payment
-    @transaction = Spree::PagaTransaction.new(:amount => @order.remaining_total)
+    @transaction = @order.paga_transactions.new
     unless @transaction.valid?
       if @transaction.errors[:amount].any?
         flash[:error] = "Amount #{@transaction.errors["amount"].join}"
@@ -20,7 +20,7 @@ Spree::CheckoutController.class_eval do
 
   def paga_callback
     @transaction = @order.paga_transactions.create { |t| t.user = spree_current_user }
-    if params[:status] == Spree::PagaTransaction::SUCCESSFUL && @transaction.persisted?
+    if params[:status] == "SUCCESS" && @transaction.persisted?
       handle_paga_response!
     elsif params[:status] && @transaction.persisted?
       set_unsuccesful_transaction_status_and_redirect and return

@@ -1,5 +1,4 @@
 class Spree::PagaTransaction < ActiveRecord::Base
-  # attr_accessible :amount, :status
   MINIMUM_AMT = 1
   PENDING      = 'Pending'
   SUCCESSFUL  = 'Successful'
@@ -9,7 +8,7 @@ class Spree::PagaTransaction < ActiveRecord::Base
   belongs_to :user
   validates :amount, :numericality => { :greater_than_or_equal_to => MINIMUM_AMT }
   validates :transaction_id, :order, :presence => true, :if => lambda {|t| t.response_status? }
-  validates :transaction_id, :uniqueness => true
+  validates :transaction_id, :uniqueness => true, :allow_blank => true
 
   before_validation :assign_values, :on => :create
   before_save :update_transaction_status, :unless => :success?
@@ -41,7 +40,7 @@ class Spree::PagaTransaction < ActiveRecord::Base
   end
 
   def update_transaction(transaction_params)
-    self.transaction_id = transaction_params[:transaction_id] || generate_transaction_id
+    self.transaction_id = transaction_params[:transaction_id].present? ? transaction_params[:transaction_id] : generate_transaction_id
     self.paga_fee = transaction_params[:fee]
     self.amount = transaction_params[:total]
     self.response_status = transaction_params[:status]
@@ -71,9 +70,9 @@ class Spree::PagaTransaction < ActiveRecord::Base
     payment.started_processing!
   end
 
-  def generate_transaction_id
+  def generate_tranx_id
     begin
-      transaction_id = SecureRandom.hex(8)
+      self.transaction_id = SecureRandom.hex(10)
     end while Spree::PagaTransaction.exists?(:transaction_id => transaction_id)
   end
 

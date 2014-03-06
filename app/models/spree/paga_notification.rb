@@ -1,6 +1,6 @@
 class Spree::PagaNotification < ActiveRecord::Base
   validates :transaction_id, :amount, :presence => true
-  validates :transaction_id, :uniqueness => true
+  validates :transaction_id, :uniqueness => true, :allow_blank => true
 
   after_save :update_transaction_status
 
