@@ -41,7 +41,7 @@ describe Spree::CheckoutController do
       order.stub(:state=).and_return("payment")
       Spree::PaymentMethod.stub(:where).and_return([paga_payment_method])
       Spree::PaymentMethod::Paga.stub(:first).and_return(paga_payment_method)
-      controller.stub(:paga_payment_attributes).and_return({"payment_method_id" => paga_payment_method.id.to_s})
+      controller.stub(:paga_payment_attributes).and_return({:payment_method_id => paga_payment_method.id.to_s})
     end
 
     describe 'redirect_to_paga_if_payment_by_paga' do
@@ -96,22 +96,25 @@ describe Spree::CheckoutController do
       end
 
       before do
-        order.stub(:build_paga_transaction).and_return(paga_transaction)
+        @paga_transactions = []
+        order.stub(:paga_transactions).and_return(@paga_transactions)
+        @paga_transactions.stub(:create).and_return(paga_transaction)
         paga_transaction.stub(:user=).and_return(user)
         controller.stub(:authenticate_merchant_key).and_return(true)
       end
 
       it "should receive build_paga_transaction" do
-        order.should_receive(:build_paga_transaction).and_return(paga_transaction)
+        order.should_receive(:paga_transactions).and_return(@paga_transactions)
         send_request
       end
 
       it "should_receive user=" do
+        @paga_transactions.stub(:create).and_yield(paga_transaction)
         paga_transaction.should_receive(:user=).and_return(user)
         send_request
       end
 
-      context 'when not authenticate_merchant_key and status is not present' do
+      context 'when authenticate_merchant_key not valid' do
         before do
           controller.stub(:authenticate_merchant_key).and_return(false)
         end
@@ -127,41 +130,6 @@ describe Spree::CheckoutController do
         end
       end
 
-      context 'when authenticate_merchant_key invalid but status present' do
-        before do
-          paga_transaction.stub(:status=).and_return("Pending")
-          paga_transaction.stub(:response_status=).and_return("Pending")
-          paga_transaction.stub(:save).and_return(true)
-        end
-
-        context 'set_unsuccesful_transaction_status_and_redirect' do
-          it "should_receive receive status" do
-            paga_transaction.should_receive(:status=).with(Spree::PagaTransaction::UNSUCCESSFUL).and_return("Pending")
-            send_request({:status => "Pending"})
-          end
-
-          it "should_receive receive response status" do
-            paga_transaction.should_receive(:response_status=).and_return("Pending")
-            send_request({:status => "Pending"})
-          end
-
-          it "should_receive save" do
-            paga_transaction.should_receive(:save).and_return(true)
-            send_request({:status => "Pending"})
-          end
-
-          it "should set flash message" do
-            send_request({:status => "Pending"})
-            flash[:error].should eq("Transaction Failed." + "<br/>" + "Reason: " + "Pending")
-          end
-
-          it "should redirect_to root_path" do
-            send_request({:status => "Pending"})
-            response.should redirect_to(spree.root_path)
-          end
-        end
-      end
-
       context 'when authenticate_merchant_key and status success' do
         before do
           controller.stub(:authenticate_merchant_key).and_return(true)
@@ -169,7 +137,7 @@ describe Spree::CheckoutController do
 
         context 'transaction valid' do
           before do
-            paga_transaction.stub(:valid?).and_return(true)
+            paga_transaction.stub(:persisted?).and_return(true)
           end
 
           describe 'handle_paga_response!' do
@@ -187,43 +155,18 @@ describe Spree::CheckoutController do
               paga_transaction.stub(:success?).and_return(true)
               paga_transaction.stub(:amount_valid?).and_return(true)
               order.stub(:finalize_order).and_return(true)
+              paga_transaction.stub(:update_transaction).and_return(true)
             end
 
-            it "should_receive set_paga_transaction_details" do
-              controller.should_receive(:set_paga_transaction_details).and_return(true)
+            it "should_receive update_transaction" do
+              paga_transaction.should_receive(:update_transaction).with({"status" => "SUCCESS", "total" => "100", "transaction_id" => "12", "controller" => "spree/checkout", "action" => "paga_callback"}).and_return(true)
               send_request({:status => "SUCCESS", :total => "100", :transaction_id => "12"})
-            end
-
-            context 'set_paga_transaction_details' do
-              it "should_receive paga_fee" do
-                paga_transaction.should_receive(:paga_fee=).and_return(100.0)
-                send_request({:status => "SUCCESS", :total => "100", :transaction_id => "12"})
-              end
-
-              it "should_receive transaction_id" do
-                paga_transaction.should_receive(:transaction_id=).and_return("12")
-                send_request({:status => "SUCCESS", :total => "100", :transaction_id => "12"})
-              end
-
-              it "should_receive response_status=" do
-                paga_transaction.should_receive(:response_status=).and_return("SUCCESS")
-                send_request({:status => "SUCCESS", :total => "100", :transaction_id => "12"})
-              end
-
-              it "should_receive save" do
-                paga_transaction.should_receive(:save).and_return(true)
-                send_request({:status => "SUCCESS", :total => "100", :transaction_id => "12"})
-              end
             end
 
             describe 'process_transaction' do
               context 'when Transaction is success' do
                 context 'when amount_valid true' do
-                  describe 'finalize_order' do
-                    it "order should_receive finalize_order" do
-                      order.should_receive(:finalize_order).and_return(true)
-                      send_request({:status => "SUCCESS", :total => "100", :transaction_id => "12"})
-                    end
+                  describe 'complete_order' do
 
                     it "should set session to nil" do
                       send_request({:status => "SUCCESS", :total => "100", :transaction_id => "12"})
@@ -241,10 +184,9 @@ describe Spree::CheckoutController do
                     end
                   end
                 end
-                context 'when amount_valid false' do
+                context 'when transaction not successful' do
                   before do
-                    paga_transaction.stub(:amount_valid?).and_return(false)
-                    paga_payment.stub(:pend!).and_return(true)
+                    paga_transaction.stub(:success?).and_return(false)
                   end
 
                   it "should redirect_to checkout_state_path(:state => payment)" do
@@ -252,75 +194,57 @@ describe Spree::CheckoutController do
                     response.should redirect_to(spree.checkout_state_path(:state => "payment"))
                   end
 
-                  describe 'set_to_payment_pending' do
-                    it "should_receive Pending on payment" do
-                      paga_payment.should_receive(:pend!).and_return(true)
-                      send_request({:status => "SUCCESS", :total => "100", :transaction_id => "12"})
-                    end
 
-                    it "should set flash message" do
-                      send_request({:status => "SUCCESS", :total => "100", :transaction_id => "12"})
-                      flash[:error].should eq("We are sorry. We are unable to authorize your purchase amount. Please contact our Administrator.")
-                    end
+                  it "should set flash message" do
+                    send_request({:status => "SUCCESS", :total => "100", :transaction_id => "12"})
+                    flash[:error].should eq("We are unable to process your payment <br/> Please keep this Transaction number: #{paga_transaction.transaction_id} for future reference")
                   end
                 end
               end
 
-              context 'when transaction is Pending' do
-                before do
-                  paga_transaction.stub(:success?).and_return(false)
-                  paga_transaction.stub(:pending?).and_return(true)
-                  order.stub(:pending!).and_return(true)
-                  paga_payment.stub(:pend!).and_return(true)
-                end
-
-                it "should receive set_to_payment_pending" do
-                  controller.should_receive(:set_to_payment_pending).with(paga_payment).and_return(true)
-                  send_request({:status => "SUCCESS", :total => "100", :transaction_id => "12"})
-                end
-
-                it "should_receive pending on order" do
-                  order.should_receive(:pending!).and_return(true)
-                  send_request({:status => "SUCCESS", :total => "100", :transaction_id => "12"})
-                end
-
-                it "should set session to nil" do
-                  send_request({:status => "SUCCESS", :total => "100", :transaction_id => "12"})
-                  session[:order_id].should be_nil
-                end
-
-                it "should redirect_to completion_route" do
-                  send_request({:status => "SUCCESS", :total => "100", :transaction_id => "12"})
-                  response.should redirect_to(spree.order_path(order))
-                end
-              end
-
-              context 'when transaction is neither pending nor success' do
-                before do
-                  paga_transaction.stub(:success?).and_return(false)
-                  paga_transaction.stub(:pending?).and_return(false)
-                  paga_payment.stub(:failure!).and_return(true)
-                end
-
-                it "should_receive failure on payment" do
-                  paga_payment.should_receive(:failure!).and_return(true)
-                  send_request({:status => "SUCCESS", :total => "100", :transaction_id => "12"})
-                end
-
-                it "should redirect_to edit checkout path" do
-                  send_request({:status => "SUCCESS", :total => "100", :transaction_id => "12"})
-                  response.should redirect_to(spree.checkout_state_path(:state => "payment"))
-                end
-              end
             end
 
           end
 
         end
 
+        context 'when status not sucess' do
+
+          before do
+            paga_transaction.stub(:response_status=).and_return("SUCCESS")
+            paga_transaction.stub(:status=).and_return("SUCCESS")
+            paga_transaction.stub(:save).and_return(true)
+          end
+
+          it "should set unsuccessful to transaction" do
+            send_request({:status => "Not Approved", :total => "100", :transaction_id => "12"})
+            flash[:error].should eq("Transaction Failed." + "<br/>" + "Reason: " + "Not Approved")
+          end
+
+          it "should_receive response_status= on transaction" do
+            paga_transaction.should_receive(:response_status=).with("Not Approved").and_return("Not Approved")
+            send_request({:status => "Not Approved", :total => "100", :transaction_id => "12"})
+          end
+
+          it "should_receive status= on transaction" do
+            paga_transaction.should_receive(:status=).with(Spree::PagaTransaction::UNSUCCESSFUL).and_return(true)
+            send_request({:status => "Not Approved", :total => "100", :transaction_id => "12"})
+          end
+
+          it "should_receive save" do
+            paga_transaction.should_receive(:save).and_return(true)
+            send_request({:status => "Not Approved", :total => "100", :transaction_id => "12"})
+          end
+
+          it "should redirect_to payment checkout" do
+            send_request({:status => "Not Approved", :total => "100", :transaction_id => "12"})
+            response.should redirect_to(spree.checkout_state_path(:state => "payment"))
+          end
+        end
+
         context 'transaction invalid' do
           before do
-            paga_transaction.stub(:valid?).and_return(false)
+            paga_transaction.stub(:persisted?).and_return(false)
           end
           it "should redirect to root" do
             send_request({:status => "SUCCESS"})
@@ -339,7 +263,8 @@ describe Spree::CheckoutController do
 
     describe 'paga_notification' do
       before do
-        controller.stub(:authentic_request?).and_return(true)
+        controller.stub(:authenticate_notification_key).and_return(true)
+        Spree::PagaNotification.stub(:build_with_params).and_return(true)
       end
 
       def send_request
@@ -362,12 +287,21 @@ describe Spree::CheckoutController do
           send_request
         end
       end
+
+      context 'when notification already present' do
+        before do
+          Spree::PagaNotification.stub(:where).and_return([])
+          Spree::PagaNotification.should_not_receive(:build_with_params)
+        end
+      end
     end
 
 
     describe 'confirm_paga_payment' do
       before do
-        order.stub(:remaining_total).and_return(100)
+        @paga_transactions = []
+        order.stub(:paga_transactions).and_return(@paga_transactions)
+        @paga_transactions.stub(:new).and_return(paga_transaction)
       end
 
       def send_request
@@ -375,12 +309,12 @@ describe Spree::CheckoutController do
       end
 
       it "should_receive remaining total" do
-        order.should_receive(:remaining_total).and_return(100)
+        order.should_receive(:paga_transactions).and_return(@paga_transactions)
         send_request
       end
 
       it "should receive new on transaction" do
-        Spree::PagaTransaction.should_receive(:new).with(:amount => 100).and_return(paga_transaction)
+        @paga_transactions.should_receive(:new).and_return(paga_transaction)
         send_request
       end
 
@@ -417,71 +351,6 @@ describe Spree::CheckoutController do
           send_request
           flash[:error].should eq("Amount is invalid")
         end
-      end
-    end
-  end
-
-  describe 'authenticate_merchant_key' do
-    before do
-      controller.stub(:payment_method).and_return(paga_payment_method)
-      paga_payment_method.stub(:preferred_merchant_key).and_return("my_key")
-    end
-
-    it "should return true if key is correct" do
-      controller.send(:authenticate_merchant_key, "my_key").should be_true
-    end
-
-    it "should return false if key is incorrect" do
-      controller.send(:authenticate_merchant_key, " wrong key").should be_false      
-    end
-  end
-
-  describe 'authenticate_notification_key' do
-    before do
-      controller.stub(:payment_method).and_return(paga_payment_method)
-      paga_payment_method.stub(:preferred_private_notification_key).and_return("my_key")
-    end
-
-    it "should return true if key is correct" do
-      controller.send(:authenticate_notification_key, "my_key").should be_true
-    end
-
-    it "should return false if key is incorrect" do
-      controller.send(:authenticate_notification_key, " wrong key").should be_false      
-    end
-  end
-
-  describe 'authentic_request?' do
-    context 'when authenticate_notification_key and authenticate_merchant_key is true' do
-      before do
-        controller.stub(:authenticate_merchant_key).and_return(true)
-        controller.stub(:authenticate_notification_key).and_return(true)
-      end
-
-      it "should return true" do
-        controller.send(:authentic_request?).should be_true
-      end
-    end
-
-    context 'when authenticate_notification_key is true and authenticate_merchant_key is false' do
-      before do
-        controller.stub(:authenticate_merchant_key).and_return(false)
-        controller.stub(:authenticate_notification_key).and_return(true)
-      end
-
-      it "should return false" do
-        controller.send(:authentic_request?).should be_false
-      end
-    end
-
-    context 'when authenticate_notification_key is false and authenticate_merchant_key is true' do
-      before do
-        controller.stub(:authenticate_merchant_key).and_return(true)
-        controller.stub(:authenticate_notification_key).and_return(false)
-      end
-
-      it "should return false" do
-        controller.send(:authentic_request?).should be_false
       end
     end
   end

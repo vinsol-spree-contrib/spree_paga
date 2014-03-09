@@ -49,17 +49,11 @@ describe Spree::Admin::PagaTransactionsController do
       controller.stub(:load_resource_instance).and_return(@paga_transaction)
       @order = mock_model(Spree::Order)
       @paga_transaction.stub(:order).and_return(@order)
-      @order.stub(:finalize_order).and_return(true)
       @paga_transaction.stub(:update_attributes).and_return(true)
     end
 
     it "should receive order" do
       @paga_transaction.should_receive(:order).and_return(@order)
-      send_request
-    end
-
-    it "should receive finalize_order on order" do
-      @order.should_receive(:finalize_order).and_return(true)
       send_request
     end
 
@@ -75,7 +69,7 @@ describe Spree::Admin::PagaTransactionsController do
 
     context 'when finalize_order gives exception' do
       before do
-        @order.stub(:finalize_order).and_raise
+        @paga_transaction.stub(:update_attributes).and_raise
       end
 
       it "should set flash message" do

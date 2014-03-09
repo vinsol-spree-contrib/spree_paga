@@ -7,14 +7,14 @@ class Spree::PagaTransaction < ActiveRecord::Base
   belongs_to :order
   belongs_to :user
   validates :amount, :numericality => { :greater_than_or_equal_to => MINIMUM_AMT }
-  validates :transaction_id, :order, :presence => true, :if => lambda {|t| t.response_status? }
+  validates :transaction_id, :order, :presence => true, :if => :response_status?
   validates :transaction_id, :uniqueness => true, :allow_blank => true
 
   before_validation :assign_values, :on => :create
   before_save :update_transaction_status, :unless => :success?
-  before_save :update_payment_source, :if => :transaction_id_changed?
-  before_save :finalize_order, :if => [:status_changed?, :success?]
-  before_update :set_pending_for_payment, :if => [:transaction_id_changed?, :pending?]
+  before_create :update_payment_source, :if => :transaction_id_changed?
+  before_save :finalize_order, :if => [:success?, :status_changed?]
+  before_update :set_pending_for_payment, :if => [:status_changed?, :pending?]
   before_save :order_set_failure_for_payment, :if => [:status_changed?, :unsuccessful?]
   delegate :currency, to: :order
 
@@ -70,7 +70,7 @@ class Spree::PagaTransaction < ActiveRecord::Base
     payment.started_processing!
   end
 
-  def generate_tranx_id
+  def generate_transaction_id
     begin
       self.transaction_id = SecureRandom.hex(10)
     end while Spree::PagaTransaction.exists?(:transaction_id => transaction_id)

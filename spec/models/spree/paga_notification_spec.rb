@@ -6,7 +6,7 @@ describe Spree::PagaNotification do
   it { should validate_uniqueness_of(:transaction_id)}
 
 
-  describe 'check_transaction_status' do
+  describe 'update_transaction_status' do
     before do
       @paga_notification = Spree::PagaNotification.new
       @paga_notification.transaction_id = 1
@@ -28,9 +28,10 @@ describe Spree::PagaNotification do
 
       context 'when amount is valid' do
         before do
-          @paga_transaction = Spree::PagaTransaction.new(:amount => 100)
-          @paga_transaction.order = @order
-          @paga_transaction.transaction_id = @paga_notification.transaction_id
+          @order.update_column(:total, 100)
+          @paga_transaction = @order.paga_transactions.new({:transaction_id => 1}, :without_protection => true)
+          @paga_transaction.stub(:update_payment_source).and_return(true)
+          @paga_transaction.stub(:finalize_order).and_return(true)
           @paga_transaction.save!
         end
 
@@ -45,9 +46,13 @@ describe Spree::PagaNotification do
 
       context 'when amount is not valid' do
         before do
-          @paga_transaction = Spree::PagaTransaction.new(:amount => -50)
-          @paga_transaction.order = @order
-          @paga_transaction.transaction_id = @paga_notification.transaction_id
+          @order.update_column(:total, 100)
+          @paga_transaction = @order.paga_transactions.new({:transaction_id => 1}, :without_protection => true)
+          @paga_transaction.stub(:update_payment_source).and_return(true)
+          @paga_transaction.stub(:finalize_order).and_return(true)
+          @paga_transaction.stub(:update_transaction_status).and_return(true)
+          @paga_transaction.save(:validate => false)
+          @paga_transaction.amount = 0
           @paga_transaction.save(:validate => false)
         end
         it "transaction should not be successful" do
@@ -60,7 +65,7 @@ describe Spree::PagaNotification do
 
   describe '.build_with_params' do
     it "should save attributes of notification" do
-      notification = Spree::PagaNotification.build_with_params({:transaction_reference => "123", :transaction_id => "trans123", :amount => 100.0, :transaction_type => "paga"})
+      notification = Spree::PagaNotification.save_with_params({:transaction_reference => "123", :amount => 100.0, :transaction_type => "paga", :transaction_datetime => Time.current, :transaction_id => "trans123"})
       notification.transaction_reference.should  eq("123")
       notification.transaction_id.should  eq("trans123")
       notification.amount.should  eq(100.0)

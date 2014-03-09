@@ -31,7 +31,7 @@ Spree::CheckoutController.class_eval do
 
 
   def paga_notification
-    Spree::PagaNotification.build_with_params(params, transaction_id) unless Spree::PagaNotification.where(:transaction_id => params[:transaction_id]).first
+    Spree::PagaNotification.build_with_params(params) unless Spree::PagaNotification.where(:transaction_id => params[:transaction_id]).first
     render :nothing => true
   end
 

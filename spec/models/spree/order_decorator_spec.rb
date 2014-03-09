@@ -3,6 +3,8 @@ require 'spec_helper'
 describe Spree::Order do
   let(:user) { Spree::User.create!(:email => 'test@testmail.com', :password => '123456') }
   let(:order) { Spree::Order.create! { |order| order.user = user }}
+
+  it {should have_many(:paga_transactions)}
   
   before(:each) do
     order.update_column(:total, 1000)

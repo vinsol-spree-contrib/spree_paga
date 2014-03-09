@@ -4,14 +4,15 @@ class Spree::PagaNotification < ActiveRecord::Base
 
   after_save :update_transaction_status
 
-  def self.save_with_params(params, transaction_id)
+  def self.save_with_params(notification_params)
     transaction_response = Spree::PagaNotification.new
-    transaction_response.transaction_reference = params[:transaction_reference]
-    transaction_response.transaction_id = transaction_id
-    transaction_response.amount = params[:amount]
-    transaction_response.transaction_type = params[:transaction_type]
-    transaction_response.transaction_datetime = params[:transaction_datetime].to_datetime
+    transaction_response.transaction_reference = notification_params[:transaction_reference]
+    transaction_response.transaction_id = notification_params[:transaction_id]
+    transaction_response.amount = notification_params[:amount]
+    transaction_response.transaction_type = notification_params[:transaction_type]
+    transaction_response.transaction_datetime = notification_params[:transaction_datetime].to_datetime
     transaction_response.save
+    transaction_response
   end
 
 
