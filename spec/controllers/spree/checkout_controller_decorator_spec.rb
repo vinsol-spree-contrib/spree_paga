@@ -101,6 +101,8 @@ describe Spree::CheckoutController do
         @paga_transactions.stub(:create).and_return(paga_transaction)
         paga_transaction.stub(:user=).and_return(user)
         controller.stub(:authenticate_merchant_key).and_return(true)
+        paga_transaction.stub(:generate_transaction_id).and_return("trans_id")
+        paga_transaction.stub(:transaction_id=).and_return("trans_id")
       end
 
       it "should receive build_paga_transaction" do
@@ -218,7 +220,7 @@ describe Spree::CheckoutController do
 
           it "should set unsuccessful to transaction" do
             send_request({:status => "Not Approved", :total => "100", :transaction_id => "12"})
-            flash[:error].should eq("Transaction Failed." + "<br/>" + "Reason: " + "Not Approved")
+            flash[:error].should eq("Transaction Failed. <br/> Reason: Not Approved <br/> Transaction Reference: #{paga_transaction.transaction_id}")
           end
 
           it "should_receive response_status= on transaction" do
@@ -228,6 +230,11 @@ describe Spree::CheckoutController do
 
           it "should_receive status= on transaction" do
             paga_transaction.should_receive(:status=).with(Spree::PagaTransaction::UNSUCCESSFUL).and_return(true)
+            send_request({:status => "Not Approved", :total => "100", :transaction_id => "12"})
+          end
+
+          it "should_receive transaction_id= on transaction" do
+            paga_transaction.should_receive(:transaction_id=).with("12").and_return(true)
             send_request({:status => "Not Approved", :total => "100", :transaction_id => "12"})
           end
 

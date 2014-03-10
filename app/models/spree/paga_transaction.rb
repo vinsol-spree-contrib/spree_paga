@@ -12,7 +12,7 @@ class Spree::PagaTransaction < ActiveRecord::Base
 
   before_validation :assign_values, :on => :create
   before_save :update_transaction_status, :unless => :success?
-  before_create :update_payment_source, :if => :transaction_id_changed?
+  before_save :update_payment_source, :if => :transaction_id_changed?
   before_save :finalize_order, :if => [:success?, :status_changed?]
   before_update :set_pending_for_payment, :if => [:status_changed?, :pending?]
   before_save :order_set_failure_for_payment, :if => [:status_changed?, :unsuccessful?]
@@ -47,6 +47,13 @@ class Spree::PagaTransaction < ActiveRecord::Base
     self.save
   end
 
+  def generate_transaction_id
+    begin
+      self.transaction_id = SecureRandom.hex(10)
+    end while Spree::PagaTransaction.exists?(:transaction_id => transaction_id)
+    transaction_id
+  end
+
   private
 
   def set_pending_for_payment
@@ -68,12 +75,6 @@ class Spree::PagaTransaction < ActiveRecord::Base
     payment.source = Spree::PaymentMethod::Paga.first
     payment.save
     payment.started_processing!
-  end
-
-  def generate_transaction_id
-    begin
-      self.transaction_id = SecureRandom.hex(10)
-    end while Spree::PagaTransaction.exists?(:transaction_id => transaction_id)
   end
 
   def update_transaction_status

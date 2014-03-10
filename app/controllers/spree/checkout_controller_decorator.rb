@@ -89,8 +89,9 @@ Spree::CheckoutController.class_eval do
     def set_unsuccesful_transaction_status_and_redirect
       @transaction.response_status = params[:status]
       @transaction.status = Spree::PagaTransaction::UNSUCCESSFUL
+      @transaction.transaction_id = params[:transaction_id].present? ? params[:transaction_id] : @transaction.generate_transaction_id
       @transaction.save
-      flash[:error] = "Transaction Failed." + "<br/>" + "Reason: " + params[:status]
+      flash[:error] = "Transaction Failed. <br/> Reason: #{params[:status]} <br/> Transaction Reference: #{@transaction.transaction_id}".html_safe
       redirect_to checkout_state_path(:state => "payment")
     end
 
