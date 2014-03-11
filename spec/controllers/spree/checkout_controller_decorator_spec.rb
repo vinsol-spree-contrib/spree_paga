@@ -33,7 +33,6 @@ describe Spree::CheckoutController do
       order.stub(:has_checkout_step?).with("payment").and_return(true)
       order.stub(:payment?).and_return(true)
       Spree::PaymentMethod::Paga.stub(:first).and_return(paga_payment_method)
-      controller.stub(:after_update_attributes).and_return(false)
       order.stub(:update_attributes).and_return(true)
       order.stub(:next).and_return(true)
       order.stub(:completed?).and_return(true)
@@ -63,17 +62,6 @@ describe Spree::CheckoutController do
         it "should redirect to confirm_paga_payment_path" do
           send_request(:order => { :payments_attributes => [{:payment_method_id => paga_payment_method.id}]}, :state => "payment")
           response.should redirect_to("/confirm_paga_payment")
-        end
-
-        context 'when update_attributes true' do
-          before do
-            order.stub(:update_attributes).and_return(true)
-          end
-
-          it "should_receive after_update_attributes" do
-            controller.should_receive(:after_update_attributes).and_return(true)
-            send_request(:order => { :payments_attributes => [{:payment_method_id => paga_payment_method.id}]}, :state => "payment")
-          end
         end
       end
 
