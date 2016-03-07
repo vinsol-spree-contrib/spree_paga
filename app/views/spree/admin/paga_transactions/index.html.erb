@@ -1,9 +1,9 @@
-<%= render :partial => 'spree/admin/shared/configuration_menu' %>
+<%= render :partial => 'spree/admin/shared/sub_menu/configuration' %>
 <% content_for :page_title do %>
   <h1><%= Spree.t("paga_transactions") %></h1>
 <% end %>
 
-<table class="index">
+<table class="index table table-striped table-hover">
   <thead data-hook="admin_paga_transactions_index_headers">
     <th><%= Spree.t("transaction_id") %></th>
     <th><%= Spree.t("transaction_date") %></th>

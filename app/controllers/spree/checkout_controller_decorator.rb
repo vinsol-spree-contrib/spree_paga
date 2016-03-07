@@ -1,9 +1,9 @@
 Spree::CheckoutController.class_eval do
-  skip_before_filter :verify_authenticity_token, :only => [:confirm_paga_payment, :paga_callback, :paga_notification]
+  skip_before_filter :verify_authenticity_token, only: [:confirm_paga_payment, :paga_callback, :paga_notification]
 
-  before_filter :redirect_to_paga_if_payment_by_paga, :only => [:update]
-  before_filter :authenticate_merchant_key, :only => :paga_callback
-  before_filter :authenticate_notification_key, :only => :paga_notification
+  before_filter :redirect_to_paga_if_payment_by_paga, only: [:update]
+  before_filter :authenticate_merchant_key, only: :paga_callback
+  before_filter :authenticate_notification_key, only: :paga_notification
   helper_method :payment_method
 
   def confirm_paga_payment
@@ -25,7 +25,7 @@ Spree::CheckoutController.class_eval do
     elsif params[:status] && @transaction.persisted?
       set_unsuccesful_transaction_status_and_redirect and return
     else
-      redirect_to(spree.root_path, :flash => { :error => "Invalid Request!" }) and return
+      redirect_to(spree.root_path, flash: { :error => "Invalid Request!" }) and return
     end
   end
 
@@ -39,9 +39,9 @@ Spree::CheckoutController.class_eval do
 
     def redirect_to_paga_if_payment_by_paga
       if payment_page? && payment_attributes = paga_payment_attributes(params[:order][:payments_attributes])
-        payment_method = Spree::PaymentMethod.where(:id => payment_attributes[:payment_method_id]).first
+        payment_method = Spree::PaymentMethod.where(id: payment_attributes[:payment_method_id]).first
         if payment_method.kind_of?(Spree::PaymentMethod::Paga)
-          @order.update_attributes(object_params)
+          @order.update_from_params(params, permitted_checkout_attributes, request.headers.env)
           redirect_to(confirm_paga_payment_path) and return
         end
       end
@@ -56,11 +56,11 @@ Spree::CheckoutController.class_eval do
     end
 
     def authenticate_merchant_key
-      redirect_to(spree.root_path, :flash => { :error => "Invalid Request!" }) unless params[:key] == payment_method.preferred_merchant_key
+      redirect_to(spree.root_path, flash: { error: "Invalid Request!" }) unless params[:key] == payment_method.preferred_merchant_key
     end
 
     def authenticate_notification_key
-      render :nothing => true unless params[:notification_private_key] == payment_method.preferred_private_notification_key
+      render nothing: true unless params[:notification_private_key] == payment_method.preferred_private_notification_key
     end
 
     def handle_paga_response!
@@ -74,7 +74,7 @@ Spree::CheckoutController.class_eval do
         complete_order
       else
         flash[:error] = "We are unable to process your payment <br/> Please keep this Transaction number: #{@transaction.transaction_id} for future reference".html_safe
-        redirect_to checkout_state_path(:state => "payment") and return
+        redirect_to checkout_state_path(state: "payment") and return
       end
     end
 
@@ -94,7 +94,7 @@ Spree::CheckoutController.class_eval do
       @transaction.transaction_id = params[:transaction_id].present? ? params[:transaction_id] : @transaction.generate_transaction_id
       @transaction.save
       flash[:error] = "Transaction Failed. <br/> Reason: #{params[:status]} <br/> Transaction Reference: #{@transaction.transaction_id}".html_safe
-      redirect_to checkout_state_path(:state => "payment")
+      redirect_to checkout_state_path(state: "payment")
     end
 
     ### creating notification for testing in development/test environment

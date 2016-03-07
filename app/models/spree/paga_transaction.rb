@@ -6,16 +6,16 @@ class Spree::PagaTransaction < ActiveRecord::Base
 
   belongs_to :order
   belongs_to :user
-  validates :amount, :numericality => { :greater_than_or_equal_to => MINIMUM_AMT }
-  validates :transaction_id, :order, :presence => true, :if => :response_status?
-  validates :transaction_id, :uniqueness => true, :allow_blank => true
+  validates :amount, numericality: { greater_than_or_equal_to: MINIMUM_AMT }
+  validates :transaction_id, :order, presence: true, if: :response_status?
+  validates :transaction_id, uniqueness: true, allow_blank: true
 
-  before_validation :assign_values, :on => :create
-  before_save :update_transaction_status, :unless => :success?
-  before_save :update_payment_source, :if => :transaction_id_changed?
-  before_save :finalize_order, :if => [:success?, :status_changed?]
-  before_update :set_pending_for_payment, :if => [:status_changed?, :pending?]
-  before_save :order_set_failure_for_payment, :if => [:status_changed?, :unsuccessful?]
+  before_validation :assign_values, on: :create
+  before_save :update_transaction_status, unless: :success?
+  before_save :update_payment_source, if: :transaction_id_changed?
+  before_save :finalize_order, if: [:success?, :status_changed?]
+  before_update :set_pending_for_payment, if: [:status_changed?, :pending?]
+  before_save :order_set_failure_for_payment, if: [:status_changed?, :unsuccessful?]
   delegate :currency, to: :order
 
   def assign_values
@@ -50,7 +50,7 @@ class Spree::PagaTransaction < ActiveRecord::Base
   def generate_transaction_id
     begin
       self.transaction_id = SecureRandom.hex(10)
-    end while Spree::PagaTransaction.exists?(:transaction_id => transaction_id)
+    end while Spree::PagaTransaction.exists?(transaction_id: transaction_id)
     transaction_id
   end
 
@@ -78,7 +78,7 @@ class Spree::PagaTransaction < ActiveRecord::Base
   end
 
   def update_transaction_status
-    paga_notification = Spree::PagaNotification.where(:transaction_id => self.transaction_id).first
+    paga_notification = Spree::PagaNotification.where(transaction_id: self.transaction_id).first
     if paga_notification && amount_valid?
       self.status = SUCCESSFUL
       self.amount = paga_notification.amount

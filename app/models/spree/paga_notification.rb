@@ -1,6 +1,6 @@
 class Spree::PagaNotification < ActiveRecord::Base
-  validates :transaction_id, :amount, :presence => true
-  validates :transaction_id, :uniqueness => true, :allow_blank => true
+  validates :transaction_id, :amount, presence: true
+  validates :transaction_id, uniqueness: true, allow_blank: true
 
   after_save :update_transaction_status
 
@@ -19,7 +19,7 @@ class Spree::PagaNotification < ActiveRecord::Base
   private
 
   def update_transaction_status
-    paga_transaction = Spree::PagaTransaction.where(:transaction_id => self.transaction_id).first
+    paga_transaction = Spree::PagaTransaction.where(transaction_id: self.transaction_id).first
     if paga_transaction && paga_transaction.amount_valid?
       paga_transaction.status = Spree::PagaTransaction::SUCCESSFUL
       paga_transaction.amount = self.amount

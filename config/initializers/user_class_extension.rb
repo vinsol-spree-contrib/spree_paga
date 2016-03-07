@@ -3,7 +3,7 @@ Spree::Core::Engine.config.to_prepare do
     Spree.user_class.class_eval do
 
       def last_incomplete_spree_order
-        spree_orders.incomplete.not_pending.order('created_at DESC').first
+        orders.incomplete.not_pending.order('created_at DESC').first
       end
     end
   end
