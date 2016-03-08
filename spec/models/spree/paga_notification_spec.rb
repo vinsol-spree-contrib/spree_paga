@@ -1,9 +1,9 @@
 require 'spec_helper'
 
 describe Spree::PagaNotification do
-  it { should validate_presence_of(:transaction_id)}
-  it { should validate_presence_of(:amount)}
-  it { should validate_uniqueness_of(:transaction_id)}
+  it { is_expected.to validate_presence_of(:transaction_id)}
+  it { is_expected.to validate_presence_of(:amount)}
+  it { is_expected.to validate_uniqueness_of(:transaction_id)}
 
 
   describe 'update_transaction_status' do
@@ -17,7 +17,7 @@ describe Spree::PagaNotification do
     context 'when transaction not present' do
 
       it "transaction should not be successful" do
-        Spree::PagaTransaction.where(:transaction_id => @paga_notification.transaction_id).first.should be_nil 
+        expect(Spree::PagaTransaction.where(:transaction_id => @paga_notification.transaction_id).first).to be_nil
       end
     end
 
@@ -29,34 +29,34 @@ describe Spree::PagaNotification do
       context 'when amount is valid' do
         before do
           @order.update_column(:total, 100)
-          @paga_transaction = @order.paga_transactions.new({:transaction_id => 1}, :without_protection => true)
-          @paga_transaction.stub(:update_payment_source).and_return(true)
-          @paga_transaction.stub(:finalize_order).and_return(true)
+          @paga_transaction = @order.paga_transactions.new(transaction_id: 1)
+          allow(@paga_transaction).to receive(:update_payment_source).and_return(true)
+          allow(@paga_transaction).to receive(:finalize_order).and_return(true)
           @paga_transaction.save!
         end
 
         it "should be successful" do
-          @paga_transaction.reload.should be_success
+          expect(@paga_transaction.reload).to be_success
         end
 
         it "should have same amount as notification" do
-          @paga_transaction.reload.amount.should eq(@paga_notification.amount)
+          expect(@paga_transaction.reload.amount).to eq(@paga_notification.amount)
         end
       end
 
       context 'when amount is not valid' do
         before do
           @order.update_column(:total, 100)
-          @paga_transaction = @order.paga_transactions.new({:transaction_id => 1}, :without_protection => true)
-          @paga_transaction.stub(:update_payment_source).and_return(true)
-          @paga_transaction.stub(:finalize_order).and_return(true)
-          @paga_transaction.stub(:update_transaction_status).and_return(true)
+          @paga_transaction = @order.paga_transactions.new(transaction_id: 1)
+          allow(@paga_transaction).to receive(:update_payment_source).and_return(true)
+          allow(@paga_transaction).to receive(:finalize_order).and_return(true)
+          allow(@paga_transaction).to receive(:update_transaction_status).and_return(true)
           @paga_transaction.save(:validate => false)
           @paga_transaction.amount = 0
           @paga_transaction.save(:validate => false)
         end
         it "transaction should not be successful" do
-          @paga_transaction.should_not be_success
+          expect(@paga_transaction).not_to be_success
         end
       end
     end
@@ -66,10 +66,10 @@ describe Spree::PagaNotification do
   describe '.build_with_params' do
     it "should save attributes of notification" do
       notification = Spree::PagaNotification.save_with_params({:transaction_reference => "123", :amount => 100.0, :transaction_type => "paga", :transaction_datetime => Time.current, :transaction_id => "trans123"})
-      notification.transaction_reference.should  eq("123")
-      notification.transaction_id.should  eq("trans123")
-      notification.amount.should  eq(100.0)
-      notification.transaction_type.should  eq("paga")
+      expect(notification.transaction_reference).to  eq("123")
+      expect(notification.transaction_id).to  eq("trans123")
+      expect(notification.amount).to  eq(100.0)
+      expect(notification.transaction_type).to  eq("paga")
     end
   end
 end

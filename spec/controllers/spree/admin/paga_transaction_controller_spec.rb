@@ -11,22 +11,18 @@ describe Spree::Admin::PagaTransactionsController do
     before do
       @paga_transaction = mock_model(Spree::PagaTransaction)
       @paga_transactions = [@paga_transaction]
-      controller.stub(:spree_current_user).and_return(user)
-      controller.stub(:authorize_admin).and_return(true)
-      controller.stub(:authorize!).and_return(true)
-      user.stub(:generate_spree_api_key!).and_return(true)
-      controller.stub(:collection).and_return(@paga_transactions)
-      Spree::PagaTransaction.stub(:scoped).and_return(@paga_transactions)
-      @paga_transactions.stub(:page).and_return(@paga_transactions)
-    end
+      allow(controller).to receive(:spree_current_user).and_return(user)
+      allow(controller).to receive(:authorize_admin).and_return(true)
+      allow(controller).to receive(:authorize!).and_return(true)
+      allow(@paga_transaction).to receive(:includes).and_return(@paga_transactions)
+      allow(user).to receive(:generate_spree_api_key!).and_return(true)
+      allow(controller).to receive(:collection).and_return(@paga_transactions)
+      allow(@paga_transactions).to receive(:page).and_return(@paga_transactions)
 
-    it "should receive scoped" do
-      Spree::PagaTransaction.should_receive(:scoped).and_return(@paga_transactions)
-      send_request
     end
 
     it "should_receive page" do
-      @paga_transactions.should_receive(:page).with("1").and_return(@paga_transactions)
+      expect(Spree::PagaTransaction).to receive(:page).with("1").and_return(@paga_transactions)
       send_request
     end
 
@@ -42,39 +38,39 @@ describe Spree::Admin::PagaTransactionsController do
     before do
       @paga_transaction = mock_model(Spree::PagaTransaction)
       @paga_transactions = [@paga_transaction]
-      controller.stub(:spree_current_user).and_return(user)
-      controller.stub(:authorize_admin).and_return(true)
-      controller.stub(:authorize!).and_return(true)
-      user.stub(:generate_spree_api_key!).and_return(true)
-      controller.stub(:load_resource_instance).and_return(@paga_transaction)
+      allow(controller).to receive(:spree_current_user).and_return(user)
+      allow(controller).to receive(:authorize_admin).and_return(true)
+      allow(controller).to receive(:authorize!).and_return(true)
+      allow(user).to receive(:generate_spree_api_key!).and_return(true)
+      allow(controller).to receive(:load_resource_instance).and_return(@paga_transaction)
       @order = mock_model(Spree::Order)
-      @paga_transaction.stub(:order).and_return(@order)
-      @paga_transaction.stub(:update_attributes).and_return(true)
+      allow(@paga_transaction).to receive(:order).and_return(@order)
+      allow(@paga_transaction).to receive(:update_attributes).and_return(true)
     end
 
     it "should receive order" do
-      @paga_transaction.should_receive(:order).and_return(@order)
+      expect(@paga_transaction).to receive(:order).and_return(@order)
       send_request
     end
 
     it "should receive update_attributes" do
-      @paga_transaction.should_receive(:update_attributes).with(:status => Spree::PagaTransaction::SUCCESSFUL).and_return(true)
+      expect(@paga_transaction).to receive(:update_attributes).with(:status => Spree::PagaTransaction::SUCCESSFUL).and_return(true)
       send_request
     end
 
     it "should set flash message" do
       send_request
-      flash.now[:success].should eq("Order Completed")
+      expect(flash.now[:success]).to eq("Order Completed")
     end
 
     context 'when finalize_order gives exception' do
       before do
-        @paga_transaction.stub(:update_attributes).and_raise
+        allow(@paga_transaction).to receive(:update_attributes).and_raise
       end
 
       it "should set flash message" do
         send_request
-        flash.now[:error].should eq("Sorry order cannot be completed")
+        expect(flash.now[:error]).to eq("Sorry order cannot be completed")
       end
     end
 

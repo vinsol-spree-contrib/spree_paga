@@ -5,17 +5,17 @@ describe Spree::Admin::PaymentsController do
   describe 'can_transition_to_payment' do
 
     before do
-      controller.stub :authorize! => true
-      controller.stub(:authorize_admin).and_return(true)
-      controller.stub(:load_payment).and_return(true)
-      controller.stub(:load_data).and_return(true)
+      allow(controller).to receive_messages :authorize! => true
+      allow(controller).to receive(:authorize_admin).and_return(true)
+      allow(controller).to receive(:load_payment).and_return(true)
+      allow(controller).to receive(:load_data).and_return(true)
       @order = mock_model(Spree::Order)
       # controller.instance_variable_set(:@order, order)
       # order.stub(:pending?).and_return(false)
       # order.stub(:complete?).and_return(false)
       # order.stub(:payment?).and_return(false)
-      Spree::Order.stub find_by_number!: @order
-      @order.stub(:payment_required? => true)
+      allow(Spree::Order).to receive_messages find_by_number!: @order
+      allow(@order).to receive_messages(:payment_required? => true)
     end
     context "try to skip customer details step" do
       # it "redirect to customer details step" do
