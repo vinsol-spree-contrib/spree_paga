@@ -17,7 +17,7 @@ describe Spree::PagaNotification do
     context 'when transaction not present' do
 
       it "transaction should not be successful" do
-        expect(Spree::PagaTransaction.where(:transaction_id => @paga_notification.transaction_id).first).to be_nil
+        expect(Spree::PagaTransaction.find_by(transaction_id: @paga_notification.transaction_id)).to be_nil
       end
     end
 

@@ -27,7 +27,8 @@ Spree::Order.class_eval do
 
   def finalize_order
     paga_payment.complete!
-    update_attributes(state: "complete", completed_at: Time.now)
+    update_attributes(state: "complete", completed_at: Time.current)
     finalize!
+    update!
   end
 end

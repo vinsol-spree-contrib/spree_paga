@@ -19,7 +19,7 @@ class Spree::PagaNotification < ActiveRecord::Base
   private
 
   def update_transaction_status
-    paga_transaction = Spree::PagaTransaction.where(transaction_id: self.transaction_id).first
+    paga_transaction = Spree::PagaTransaction.find_by(transaction_id: self.transaction_id)
     if paga_transaction && paga_transaction.amount_valid?
       paga_transaction.status = Spree::PagaTransaction::SUCCESSFUL
       paga_transaction.amount = self.amount
