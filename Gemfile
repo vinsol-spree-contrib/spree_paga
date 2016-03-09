@@ -10,6 +10,7 @@ group :test do
   gem 'database_cleaner'
   gem 'launchy'
   gem 'rspec-activemodel-mocks'
+  gem 'rake', '~> 10.5.0'
 end
 
 gem 'sqlite3'
