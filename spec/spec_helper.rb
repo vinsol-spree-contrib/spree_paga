@@ -23,21 +23,8 @@ require 'spree_paga/factories'
 RSpec.configure do |config|
   config.include FactoryGirl::Syntax::Methods
 
-  # == URL Helpers
-  #
-  # Allows access to Spree's routes in specs:
-  #
-  # visit spree.admin_path
-  # current_path.should eql(spree.products_path)
   config.include Spree::TestingSupport::UrlHelpers
 
-  # == Mock Framework
-  #
-  # If you prefer to use mocha, flexmock or RR, uncomment the appropriate line:
-  #
-  # config.mock_with :mocha
-  # config.mock_with :flexmock
-  # config.mock_with :rr
   config.mock_with :rspec
   config.color = true
 
@@ -68,14 +55,5 @@ RSpec.configure do |config|
 
   config.fail_fast = ENV['FAIL_FAST'] || false
 
-  # rspec-rails 3 will no longer automatically infer an example group's spec type
-  # from the file location. You can explicitly opt-in to the feature using this
-  # config option.
-  # To explicitly tag specs without using automatic inference, set the `:type`
-  # metadata manually:
-  #
-  #     describe ThingsController, :type => :controller do
-  #       # Equivalent to being in spec/controllers
-  #     end
   config.infer_spec_type_from_file_location!
 end

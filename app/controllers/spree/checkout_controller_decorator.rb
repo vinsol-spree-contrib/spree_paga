@@ -39,7 +39,7 @@ Spree::CheckoutController.class_eval do
 
     def redirect_to_paga_if_payment_by_paga
       if payment_page? && payment_attributes = paga_payment_attributes(params[:order][:payments_attributes])
-        payment_method = Spree::PaymentMethod.where(id: payment_attributes[:payment_method_id]).first
+        payment_method = Spree::PaymentMethod.find_by(id: payment_attributes[:payment_method_id])
         if payment_method.kind_of?(Spree::PaymentMethod::Paga)
           @order.update_from_params(params, permitted_checkout_attributes, request.headers.env)
           redirect_to(confirm_paga_payment_path) and return

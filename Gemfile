@@ -12,7 +12,6 @@ group :test do
   gem 'rspec-activemodel-mocks'
   gem 'rake', '~> 10.5.0'
 end
-
 gem 'sqlite3'
 
 gem 'spree', github: 'spree/spree', branch: '3-0-stable'

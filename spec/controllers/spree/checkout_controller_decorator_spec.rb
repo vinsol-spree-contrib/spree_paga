@@ -40,8 +40,7 @@ describe Spree::CheckoutController do
       allow(order).to receive(:completed?).and_return(true)
       allow(order).to receive(:can_go_to_state?).and_return(false)
       allow(order).to receive(:state=).and_return("payment")
-      allow(Spree::PaymentMethod).to receive(:where).and_return([paga_payment_method])
-      allow(Spree::PaymentMethod::Paga).to receive(:first).and_return(paga_payment_method)
+      allow(Spree::PaymentMethod).to receive(:find_by).and_return(paga_payment_method)
       allow(controller).to receive(:paga_payment_attributes).and_return({:payment_method_id => paga_payment_method.id.to_s})
       allow(order).to receive(:temporary_address=).and_return(true)
     end
@@ -51,14 +50,13 @@ describe Spree::CheckoutController do
       end
 
       it "should receive where on Spree::PaymentMethod" do
-        expect(Spree::PaymentMethod).to receive(:where).with(:id => paga_payment_method.id.to_s).and_return([paga_payment_method])
+        expect(Spree::PaymentMethod).to receive(:find_by).with(:id => paga_payment_method.id.to_s).and_return(paga_payment_method)
         send_request(:order => { :payments_attributes => [{:payment_method_id => paga_payment_method.id}]}, :state => "payment")
       end
 
       context 'when payment_method kind_of Spree::PaymentMethod::Paga' do
         it "should_receive update_from_params" do
           expect(order).to receive(:update_from_params).and_return(true)
-          # expect(controller).to receive(:object_params)
           send_request(:order => { :payments_attributes => [{:payment_method_id => paga_payment_method.id}]}, :state => "payment")
         end
 
