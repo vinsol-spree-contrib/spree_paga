@@ -5,7 +5,7 @@ describe Spree::Admin::PagaTransactionsController do
 
   describe 'index' do
     def send_request
-      get :index, :page => "1", :use_route => "spree"
+      get :index, :page => "1"
     end
 
     before do
@@ -32,7 +32,7 @@ describe Spree::Admin::PagaTransactionsController do
   describe 'complete' do
 
     def send_request
-      xhr :get, :complete, :id => @paga_transaction.id, :use_route => "spree"
+      xhr :get, :complete, :id => @paga_transaction.id
     end
 
     before do

@@ -19,7 +19,7 @@ describe Spree::CheckoutController do
 
   describe '#update' do
     def send_request(params = {})
-      put :update, params.merge!(:use_route => 'spree', :id => order.id)
+      put :update, params.merge!(:id => order.id)
     end
 
     before(:each) do
@@ -81,7 +81,7 @@ describe Spree::CheckoutController do
 
     describe 'paga_callback' do
       def send_request(params = {})
-        post :paga_callback, params.merge!(:use_route => 'spree')
+        post :paga_callback, params
       end
 
       before do
@@ -264,7 +264,7 @@ describe Spree::CheckoutController do
       end
 
       def send_request
-        post :paga_notification, :transaction_id => paga_notification.id, :use_route => "spree"
+        post :paga_notification, :transaction_id => paga_notification.id
       end
 
       it "should_receive where" do
@@ -301,7 +301,7 @@ describe Spree::CheckoutController do
       end
 
       def send_request
-        get :confirm_paga_payment, :use_route => "spree"
+        get :confirm_paga_payment
       end
 
       it "should_receive remaining total" do
