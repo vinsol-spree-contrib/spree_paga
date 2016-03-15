@@ -11,8 +11,8 @@ group :test do
   gem 'launchy'
   gem 'rspec-activemodel-mocks'
   gem 'rake', '~> 10.5.0'
+  gem 'minitest'
 end
-gem 'sqlite3'
 
 gem 'spree', github: 'spree/spree', branch: '3-0-stable'
 

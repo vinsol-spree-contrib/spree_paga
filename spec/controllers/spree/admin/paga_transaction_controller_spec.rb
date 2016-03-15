@@ -5,7 +5,7 @@ describe Spree::Admin::PagaTransactionsController do
 
   describe 'index' do
     def send_request
-      get :index, :page => "1"
+      get :index, page: "1"
     end
 
     before do
@@ -32,7 +32,7 @@ describe Spree::Admin::PagaTransactionsController do
   describe 'complete' do
 
     def send_request
-      xhr :get, :complete, :id => @paga_transaction.id
+      xhr :get, :complete, id: @paga_transaction.id
     end
 
     before do
@@ -54,7 +54,7 @@ describe Spree::Admin::PagaTransactionsController do
     end
 
     it "should receive update_attributes" do
-      expect(@paga_transaction).to receive(:update_attributes).with(:status => Spree::PagaTransaction::SUCCESSFUL).and_return(true)
+      expect(@paga_transaction).to receive(:update_attributes).with(status: Spree::PagaTransaction::SUCCESSFUL).and_return(true)
       send_request
     end
 

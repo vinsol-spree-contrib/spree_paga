@@ -2,11 +2,11 @@ require 'spec_helper'
 
 
 describe Spree::CheckoutController do
-  let(:order) { mock_model(Spree::Order, :remaining_total => 1000, :state => 'payment') }
-  let(:user) { mock_model(Spree::User, :store_credits_total => 500) }
+  let(:order) { mock_model(Spree::Order, remaining_total: 1000, state: 'payment') }
+  let(:user) { mock_model(Spree::User, store_credits_total: 500) }
   let(:paga_payment_method) { mock_model(Spree::PaymentMethod::Paga) }
-  let(:paga_transaction) { mock_model(Spree::PagaTransaction, :transaction_id => 11) }
-  let(:paga_notification) { mock_model(Spree::PagaNotification, :transaction_id => 11) }
+  let(:paga_transaction) { mock_model(Spree::PagaTransaction, transaction_id: 11) }
+  let(:paga_notification) { mock_model(Spree::PagaNotification, transaction_id: 11) }
   let(:paga_payment) {mock_model(Spree::Payment)}
 
   before(:each) do
@@ -19,7 +19,7 @@ describe Spree::CheckoutController do
 
   describe '#update' do
     def send_request(params = {})
-      put :update, params.merge!(:id => order.id)
+      put :update, params.merge!(id: order.id)
     end
 
     before(:each) do
@@ -41,7 +41,7 @@ describe Spree::CheckoutController do
       allow(order).to receive(:can_go_to_state?).and_return(false)
       allow(order).to receive(:state=).and_return("payment")
       allow(Spree::PaymentMethod).to receive(:find_by).and_return(paga_payment_method)
-      allow(controller).to receive(:paga_payment_attributes).and_return({:payment_method_id => paga_payment_method.id.to_s})
+      allow(controller).to receive(:paga_payment_attributes).and_return({payment_method_id: paga_payment_method.id.to_s})
       allow(order).to receive(:temporary_address=).and_return(true)
     end
 
@@ -50,18 +50,18 @@ describe Spree::CheckoutController do
       end
 
       it "should receive where on Spree::PaymentMethod" do
-        expect(Spree::PaymentMethod).to receive(:find_by).with(:id => paga_payment_method.id.to_s).and_return(paga_payment_method)
-        send_request(:order => { :payments_attributes => [{:payment_method_id => paga_payment_method.id}]}, :state => "payment")
+        expect(Spree::PaymentMethod).to receive(:find_by).with(id: paga_payment_method.id.to_s).and_return(paga_payment_method)
+        send_request(order: { payments_attributes: [{payment_method_id: paga_payment_method.id}]}, state: "payment")
       end
 
       context 'when payment_method kind_of Spree::PaymentMethod::Paga' do
         it "should_receive update_from_params" do
           expect(order).to receive(:update_from_params).and_return(true)
-          send_request(:order => { :payments_attributes => [{:payment_method_id => paga_payment_method.id}]}, :state => "payment")
+          send_request(order: { payments_attributes: [{payment_method_id: paga_payment_method.id}]}, state: "payment")
         end
 
         it "should redirect to confirm_paga_payment_path" do
-          send_request(:order => { :payments_attributes => [{:payment_method_id => paga_payment_method.id}]}, :state => "payment")
+          send_request(order: { payments_attributes: [{payment_method_id: paga_payment_method.id}]}, state: "payment")
           expect(response).to redirect_to("/confirm_paga_payment")
         end
       end
@@ -72,7 +72,7 @@ describe Spree::CheckoutController do
         end
 
         it "should_receive update_attributes" do
-          send_request(:order => { :payments_attributes => [{:payment_method_id => 3}]}, :state => "payment")
+          send_request(order: { payments_attributes: [{payment_method_id: 3}]}, state: "payment")
           expect(response).not_to redirect_to("/confirm_paga_payment")
         end
       end
@@ -151,7 +151,7 @@ describe Spree::CheckoutController do
 
             it "should_receive update_transaction" do
               expect(paga_transaction).to receive(:update_transaction).with({"status" => "SUCCESS", "total" => "100", "transaction_id" => "12", "controller" => "spree/checkout", "action" => "paga_callback"}).and_return(true)
-              send_request({:status => "SUCCESS", :total => "100", :transaction_id => "12"})
+              send_request({status: "SUCCESS", total: "100", transaction_id: "12"})
             end
 
             describe 'process_transaction' do
@@ -160,17 +160,17 @@ describe Spree::CheckoutController do
                   describe 'complete_order' do
 
                     it "should set session to nil" do
-                      send_request({:status => "SUCCESS", :total => "100", :transaction_id => "12"})
+                      send_request({status: "SUCCESS", total: "100", transaction_id: "12"})
                       expect(session[:order_id]).to be_nil
                     end
 
                     it "should set flash message" do
-                      send_request({:status => "SUCCESS", :total => "100", :transaction_id => "12"})
+                      send_request({status: "SUCCESS", total: "100", transaction_id: "12"})
                       expect(flash[:notice]).to eq(Spree.t(:order_processed_successfully))
                     end
 
                     it "should redirect_to completion_route" do
-                      send_request({:status => "SUCCESS", :total => "100", :transaction_id => "12"})
+                      send_request({status: "SUCCESS", total: "100", transaction_id: "12"})
                       expect(response).to redirect_to(spree.order_path(order))
                     end
                   end
@@ -180,14 +180,14 @@ describe Spree::CheckoutController do
                     allow(paga_transaction).to receive(:success?).and_return(false)
                   end
 
-                  it "should redirect_to checkout_state_path(:state => payment)" do
-                    send_request({:status => "SUCCESS", :total => "100", :transaction_id => "12"})
-                    expect(response).to redirect_to(spree.checkout_state_path(:state => "payment"))
+                  it "should redirect_to checkout_state_path(state: payment)" do
+                    send_request({status: "SUCCESS", total: "100", transaction_id: "12"})
+                    expect(response).to redirect_to(spree.checkout_state_path(state: "payment"))
                   end
 
 
                   it "should set flash message" do
-                    send_request({:status => "SUCCESS", :total => "100", :transaction_id => "12"})
+                    send_request({status: "SUCCESS", total: "100", transaction_id: "12"})
                     expect(flash[:error]).to eq("We are unable to process your payment <br/> Please keep this Transaction number: #{paga_transaction.transaction_id} for future reference")
                   end
                 end
@@ -208,33 +208,33 @@ describe Spree::CheckoutController do
           end
 
           it "should set unsuccessful to transaction" do
-            send_request({:status => "Not Approved", :total => "100", :transaction_id => "12"})
+            send_request({status: "Not Approved", total: "100", transaction_id: "12"})
             expect(flash[:error]).to eq("Transaction Failed. <br/> Reason: Not Approved <br/> Transaction Reference: #{paga_transaction.transaction_id}")
           end
 
           it "should_receive response_status= on transaction" do
             expect(paga_transaction).to receive(:response_status=).with("Not Approved").and_return("Not Approved")
-            send_request({:status => "Not Approved", :total => "100", :transaction_id => "12"})
+            send_request({status: "Not Approved", total: "100", transaction_id: "12"})
           end
 
           it "should_receive status= on transaction" do
             expect(paga_transaction).to receive(:status=).with(Spree::PagaTransaction::UNSUCCESSFUL).and_return(true)
-            send_request({:status => "Not Approved", :total => "100", :transaction_id => "12"})
+            send_request({status: "Not Approved", total: "100", transaction_id: "12"})
           end
 
           it "should_receive transaction_id= on transaction" do
             expect(paga_transaction).to receive(:transaction_id=).with("12").and_return(true)
-            send_request({:status => "Not Approved", :total => "100", :transaction_id => "12"})
+            send_request({status: "Not Approved", total: "100", transaction_id: "12"})
           end
 
           it "should_receive save" do
             expect(paga_transaction).to receive(:save).and_return(true)
-            send_request({:status => "Not Approved", :total => "100", :transaction_id => "12"})
+            send_request({status: "Not Approved", total: "100", transaction_id: "12"})
           end
 
           it "should redirect_to payment checkout" do
-            send_request({:status => "Not Approved", :total => "100", :transaction_id => "12"})
-            expect(response).to redirect_to(spree.checkout_state_path(:state => "payment"))
+            send_request({status: "Not Approved", total: "100", transaction_id: "12"})
+            expect(response).to redirect_to(spree.checkout_state_path(state: "payment"))
           end
         end
 
@@ -243,12 +243,12 @@ describe Spree::CheckoutController do
             allow(paga_transaction).to receive(:persisted?).and_return(false)
           end
           it "should redirect to root" do
-            send_request({:status => "SUCCESS"})
+            send_request({status: "SUCCESS"})
             expect(response).to redirect_to(spree.root_path)
           end
 
           it "should set flash message" do
-            send_request({:status => "SUCCESS"})
+            send_request({status: "SUCCESS"})
             expect(flash[:error]).to eq("Invalid Request!")
           end
 
@@ -264,11 +264,11 @@ describe Spree::CheckoutController do
       end
 
       def send_request
-        post :paga_notification, :transaction_id => paga_notification.id
+        post :paga_notification, transaction_id: paga_notification.id
       end
 
       it "should_receive where" do
-        expect(Spree::PagaNotification).to receive(:where).with(:transaction_id => paga_notification.id.to_s).and_return([paga_notification])
+        expect(Spree::PagaNotification).to receive(:where).with(transaction_id: paga_notification.id.to_s).and_return([paga_notification])
         send_request
       end
 

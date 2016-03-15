@@ -23,9 +23,9 @@ describe Spree::PagaTransaction do
 
   describe 'methods' do
     before do
-      @order = Spree::Order.create!({:currency => "USD"})
+      @order = Spree::Order.create!({currency: "USD"})
       @order.update_column(:total, 100)
-      @paga_transaction = Spree::PagaTransaction.new({:amount => 100})
+      @paga_transaction = Spree::PagaTransaction.new({amount: 100})
       @paga_transaction.order = @order
       @paga_transaction.transaction_id = 1
       @paga_transaction.save
@@ -129,7 +129,7 @@ describe Spree::PagaTransaction do
 
     describe 'update_transaction' do
       before do
-        @paga_transaction.update_transaction({:fee => 5, :total => 100, :status => "Approved", :transaction_id => "trans123"})
+        @paga_transaction.update_transaction({fee: 5, total: 100, status: "Approved", transaction_id: "trans123"})
       end
 
       it 'should set paga fee' do
@@ -153,7 +153,7 @@ describe Spree::PagaTransaction do
 
       context 'when not present' do
         before do
-          @paga_transaction.update_transaction({:fee => 5, :total => 100, :status => "Approved", :transaction_id => ""})
+          @paga_transaction.update_transaction({fee: 5, total: 100, status: "Approved", transaction_id: ""})
         end
 
         it "should generate transaction_id" do
@@ -164,9 +164,9 @@ describe Spree::PagaTransaction do
 
     describe 'set_pending_for_payment' do
       before do
-        @paga_payment_method = Spree::PaymentMethod::Paga.create(:name => "paga epay")
-        @paga_payment = @order.payments.create!(:amount => 100, :payment_method_id => @paga_payment_method.id) { |p| p.state = 'checkout' }
-        @paga_transaction.update_attributes({:status => "Pending"})
+        @paga_payment_method = Spree::PaymentMethod::Paga.create(name: "paga epay")
+        @paga_payment = @order.payments.create!(amount: 100, payment_method_id: @paga_payment_method.id) { |p| p.state = 'checkout' }
+        @paga_transaction.update_attributes({status: "Pending"})
       end
 
       it "should set paga_payment to pending" do
@@ -176,9 +176,9 @@ describe Spree::PagaTransaction do
 
     describe 'order_set_failure_for_payment' do
       before do
-        @paga_payment_method = Spree::PaymentMethod::Paga.create(:name => "paga epay")
-        @paga_payment = @order.payments.create!(:amount => 100, :payment_method_id => @paga_payment_method.id) { |p| p.state = 'processing' }
-        @paga_transaction.update_attributes({:status => "Unsuccessful", :transaction_id => "trans"})
+        @paga_payment_method = Spree::PaymentMethod::Paga.create(name: "paga epay")
+        @paga_payment = @order.payments.create!(amount: 100, payment_method_id: @paga_payment_method.id) { |p| p.state = 'processing' }
+        @paga_transaction.update_attributes({status: "Unsuccessful", transaction_id: "trans"})
       end
 
       it "should set paga_payment to pending" do
@@ -190,9 +190,9 @@ describe Spree::PagaTransaction do
       before do
         allow_any_instance_of(Spree::PagaTransaction).to receive(:finalize_order).and_call_original
         @paga_transaction.update_column(:status, "Pending")
-        @paga_payment_method = Spree::PaymentMethod::Paga.create(:name => "paga epay")
-        @paga_payment = @order.payments.create!(:amount => 100, :payment_method_id => @paga_payment_method.id) { |p| p.state = 'processing' }
-        @paga_transaction.update_attributes({:status => "Successful"})
+        @paga_payment_method = Spree::PaymentMethod::Paga.create(name: "paga epay")
+        @paga_payment = @order.payments.create!(amount: 100, payment_method_id: @paga_payment_method.id) { |p| p.state = 'processing' }
+        @paga_transaction.update_attributes({status: "Successful"})
       end
 
       it "should complete order" do
@@ -205,11 +205,11 @@ describe Spree::PagaTransaction do
       before do
         allow_any_instance_of(Spree::PagaTransaction).to receive(:update_payment_source).and_call_original
         allow_any_instance_of(Spree::PagaTransaction).to receive(:assign_values).and_call_original
-        @order = Spree::Order.create!({:currency => "USD"})
+        @order = Spree::Order.create!({currency: "USD"})
         @order.update_column(:total, 100)
-        @paga_payment_method = Spree::PaymentMethod::Paga.create(:name => "paga epay")
-        @paga_payment = @order.payments.create!(:amount => 100, :payment_method_id => @paga_payment_method.id) { |p| p.state = 'processing' }
-        @paga_transaction = Spree::PagaTransaction.new({:amount => 100})
+        @paga_payment_method = Spree::PaymentMethod::Paga.create(name: "paga epay")
+        @paga_payment = @order.payments.create!(amount: 100, payment_method_id: @paga_payment_method.id) { |p| p.state = 'processing' }
+        @paga_transaction = Spree::PagaTransaction.new({amount: 100})
         @paga_transaction.order = @order
         @paga_transaction.transaction_id = 3
         @paga_transaction.save!

@@ -51,9 +51,9 @@ describe Spree::PagaNotification do
           allow(@paga_transaction).to receive(:update_payment_source).and_return(true)
           allow(@paga_transaction).to receive(:finalize_order).and_return(true)
           allow(@paga_transaction).to receive(:update_transaction_status).and_return(true)
-          @paga_transaction.save(:validate => false)
+          @paga_transaction.save(validate: false)
           @paga_transaction.amount = 0
-          @paga_transaction.save(:validate => false)
+          @paga_transaction.save(validate: false)
         end
         it "transaction should not be successful" do
           expect(@paga_transaction).not_to be_success
@@ -65,7 +65,7 @@ describe Spree::PagaNotification do
 
   describe '.build_with_params' do
     it "should save attributes of notification" do
-      notification = Spree::PagaNotification.save_with_params({:transaction_reference => "123", :amount => 100.0, :transaction_type => "paga", :transaction_datetime => Time.current, :transaction_id => "trans123"})
+      notification = Spree::PagaNotification.save_with_params({transaction_reference: "123", amount: 100.0, transaction_type: "paga", transaction_datetime: Time.current, transaction_id: "trans123"})
       expect(notification.transaction_reference).to  eq("123")
       expect(notification.transaction_id).to  eq("trans123")
       expect(notification.amount).to  eq(100.0)
