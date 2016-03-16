@@ -3,13 +3,13 @@ module Spree
     class PagaTransactionsController < ResourceController
 
       def index
-        @paga_transactions = Spree::PagaTransaction.scoped.page(params[:page])
+        @paga_transactions = Spree::PagaTransaction.includes(:order, :user).page(params[:page])
       end
 
       def complete
         @order = @paga_transaction.order
         begin
-          @paga_transaction.update_attributes(:status => Spree::PagaTransaction::SUCCESSFUL)
+          @paga_transaction.update_attributes(status: Spree::PagaTransaction::SUCCESSFUL)
           flash.now[:success] = "Order Completed"
         rescue
           flash.now[:error] = "Sorry order cannot be completed"

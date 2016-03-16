@@ -1,24 +1,22 @@
 source 'https://rubygems.org'
 
 group :test do
-  gem 'rspec-rails', '~> 2.12.0'
-  gem 'factory_girl_rails', '~> 4.2.1'
-  gem 'email_spec', '~> 1.2.1'
-
+  gem 'rspec-rails', '~> 3.3.3'
+  gem 'factory_girl_rails', '~> 4.5.0'
+  gem 'email_spec'
   gem 'ffaker'
-  gem 'shoulda-matchers', '~> 2.4.0'
+  gem 'shoulda-matchers', '~> 2.8.0'
   gem 'capybara', '~> 2.1'
-  gem 'database_cleaner', '0.9.1'
-  # gem 'selenium-webdriver', '2.32.0'
+  gem 'database_cleaner'
   gem 'launchy'
- # gem 'debugger'
+  gem 'rspec-activemodel-mocks'
+  gem 'rake', '~> 10.5.0'
+  gem 'minitest'
 end
 
-gem 'sqlite3'
-
-gem 'spree', github: 'spree/spree', branch: '2-0-stable'
+gem 'spree', github: 'spree/spree', branch: '3-0-stable'
 
 # Provides basic authentication functionality for testing parts of your engine
-gem 'spree_auth_devise', github: 'spree/spree_auth_devise', branch: '2-0-stable'
+gem 'spree_auth_devise', github: 'spree/spree_auth_devise', branch: '3-0-stable'
 
 gemspec
