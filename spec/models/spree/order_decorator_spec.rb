@@ -11,7 +11,7 @@ describe Spree::Order do
     order.update_column(:payment_total, 200)
     @shipping_category = Spree::ShippingCategory.create!(name: 'test')
     @stock_location = Spree::StockLocation.create! name: 'test'
-    @product = Spree::Product.create!(name: "product", price: 100) { |p| p.shipping_category = @shipping_category }
+    @product = Spree::Product.create!(name: "product", price: 100, available_on: Time.current) { |p| p.shipping_category = @shipping_category }
     @stock_item = @product.master.stock_items.first
     @stock_item.adjust_count_on_hand(10)
     @stock_item.save!
